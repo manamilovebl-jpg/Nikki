@@ -30,16 +30,20 @@ const arenaData = {
     "phale": { gorgeous: 1.33, elegance: 1.33, cute: 1.33, pure: 1.0, cool: 1.0 }
 };
 
-function getNikkiScore(rank, type) {
+function getNikkiScore(rank, type, starCount) {
     if (!rank) return 0;
     const r = rank.trim().toLowerCase();
     const t = type.trim().toLowerCase();
+    const starBonus = (parseInt(starCount) || 0) * 10; // CỘNG 10 ĐIỂM CHO MỖI SAO
+    
     let cat = 'accessory';
     if (t === 'dress') cat = 'dress';
     else if (t === 'top' || t === 'bottom') cat = 'top';
     else if (['hair', 'shoes', 'coat'].includes(t)) cat = 'hair';
     else if (t === 'makeup') cat = 'makeup';
-    return (baseScores[r] && baseScores[r][cat]) ? baseScores[r][cat] : 0;
+
+    const baseScore = (baseScores[r] && baseScores[r][cat]) ? baseScores[r][cat] : 0;
+    return baseScore > 0 ? (baseScore + starBonus) : 0;
 }
 
 async function init() {
@@ -53,14 +57,15 @@ async function init() {
             if (c.length < 5) return null;
             const id = c[0]?.trim();
             const type = c[4]?.trim().toLowerCase();
+            const stars = c[5]?.trim(); // CỘT F (Index 5)
             if (c[3]?.trim().toUpperCase() === 'TRUE') userInventory.push(id);
             return {
-                id: id, image: c[1]?.trim(), name: c[2]?.trim().replace(/"/g, ""), type: type,
+                id: id, image: c[1]?.trim(), name: c[2]?.trim().replace(/"/g, ""), type: type, star: stars,
                 tags: [c[16]?.trim(), c[17]?.trim()].filter(t => t),
                 stats: {
-                    gorgeous: getNikkiScore(c[6], type), simple: getNikkiScore(c[7], type), elegance: getNikkiScore(c[8], type),
-                    lively: getNikkiScore(c[9], type), mature: getNikkiScore(c[10], type), cute: getNikkiScore(c[11], type),
-                    sexy: getNikkiScore(c[12], type), pure: getNikkiScore(c[13], type), warm: getNikkiScore(c[14], type), cool: getNikkiScore(c[15], type)
+                    gorgeous: getNikkiScore(c[6], type, stars), simple: getNikkiScore(c[7], type, stars), elegance: getNikkiScore(c[8], type, stars),
+                    lively: getNikkiScore(c[9], type, stars), mature: getNikkiScore(c[10], type, stars), cute: getNikkiScore(c[11], type, stars),
+                    sexy: getNikkiScore(c[12], type, stars), pure: getNikkiScore(c[13], type, stars), warm: getNikkiScore(c[14], type, stars), cool: getNikkiScore(c[15], type, stars)
                 }
             };
         }).filter(i => i && i.id);
@@ -81,6 +86,7 @@ function showCategory(type) {
     const items = clothingData.filter(i => i.type === type);
     document.getElementById('item-lists').innerHTML = items.map(item => `
         <label class="item-checkbox">
+            <span class="item-star-tag">★${item.star}</span>
             <input type="checkbox" value="${item.id}" ${userInventory.includes(item.id) ? 'checked' : ''} onchange="updateItem('${item.id}', this.checked)">
             <img src="${item.image}" class="item-thumb" onerror="this.src='https://via.placeholder.com/45'">
             <div class="item-info"><b>${item.name}</b><br><small>${item.id}</small></div>
@@ -121,7 +127,7 @@ function suggestBestOutfit() {
         });
         if (best) {
             total += max;
-            html += `<li><img src="${best.image}" class="item-thumb"><div><b>${t.toUpperCase()}:</b> ${best.name} ${stag && best.tags.includes(stag) ? '<span style="color:red;">[Tag]</span>' : ''}<br><small>Điểm: ${Math.round(max).toLocaleString()}</small></div></li>`;
+            html += `<li><img src="${best.image}" class="item-thumb"><div><b>${t.toUpperCase()}:</b> ${best.name} ★${best.star} ${stag && best.tags.includes(stag) ? '<span style="color:red;">[Tag]</span>' : ''}<br><small>Điểm: ${Math.round(max).toLocaleString()}</small></div></li>`;
         }
     });
     document.getElementById('total-score-val').innerText = Math.round(total).toLocaleString();
