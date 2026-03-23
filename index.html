@@ -3,48 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Nikki Info - VN Edition</title>
+    <title>Nikki Arena Tool - VN</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body id="main-body">
     <div class="container">
         <header>
-            <h1>Ngôi Sao Thời Trang - Phối Đồ Khu Thi Đấu</h1>
-            <p>Dữ liệu đồng bộ trực tiếp từ Google Sheets</p>
+            <h1>NSTT - Hỗ Trợ Khu Thi Đấu</h1>
+            <p>Dữ liệu đồng bộ từ Google Sheets cá nhân</p>
         </header>
 
         <section class="inventory-section">
             <h2>1. Kho Đồ Cá Nhân</h2>
             <div id="category-tabs" class="tabs-container"></div>
             <div id="item-lists" class="items-grid">
-                <p style="text-align:center; padding:20px;">Đang tải dữ liệu từ Sheets...</p>
+                <p style="text-align:center; padding:20px;">Đang kết nối dữ liệu...</p>
             </div>
             <button class="btn-save" onclick="saveInventory()">LƯU THAY ĐỔI KHO ĐỒ</button>
         </section>
 
         <section class="calc-section">
-            <h2>2. Tính Điểm Tối Ưu</h2>
+            <h2>2. Gợi Ý & Tính Điểm</h2>
             <div class="arena-picker">
-                <label><b>Chọn Chủ đề Khu Thi Đấu:</b> 
+                <label><b>Chọn Chủ đề:</b> 
                     <select id="arena-select" onchange="applyArenaWeights()">
-                        <option value="">-- Tự nhập hệ số --</option>
-                        <option value="xuan">Chuyến đi xuân (Đơn giản, Năng động, Dễ thương)</option>
-                        <option value="he">Chuyện bên bờ biển (Đơn giản, Trong sáng, Mát mẻ)</option>
-                        <option value="noel">Đêm Noel (Đơn giản, Trong sáng, Giữ ấm)</option>
-                        <option value="vanphong">Cung cách văn phòng (Đơn giản, Thanh lịch, Trưởng thành)</option>
-                        <option value="thethao">Trận đấu thể thao (Đơn giản, Năng động, Dễ thương)</option>
-                        <option value="thamtu">Thám tử (Đơn giản, Thanh lịch, Trưởng thành)</option>
-                        <option value="rock">Cây Rock (Đơn giản, Năng động, Gợi cảm)</option>
-                        <option value="thanhxuan">Thanh xuân tươi đẹp (Đơn giản, Trong sáng, Dễ thương)</option>
-                        <option value="vandung">Vận động (Đơn giản, Năng động, Gợi cảm)</option>
-                        <option value="tiectra">Tiệc trà rừng rậm (Hoa lệ, Trong sáng, Dễ thương)</option>
-                        <option value="datiec">Dạ tiệc (Hoa lệ, Thanh lịch, Gợi cảm)</option>
-                        <option value="nuvuong">Nữ vương thanh cao (Hoa lệ, Thanh lịch, Trưởng thành)</option>
-                        <option value="ngoisao">Ngôi sao thực thụ (Hoa lệ, Năng động, Sexy)</option>
-                        <option value="tuyet">Tuyệt thế giai nhân (Hoa lệ, Thanh lịch, Trong sáng)</option>
-                        <option value="kythao">Kỳ thảo vườn xuân (Hoa lệ, Thanh lịch, Trong sáng)</option>
-                        <option value="khoahoa">Khúc khải hoàn (Hoa lệ, Thanh lịch, Sexy)</option>
-                        <option value="phale">Cung điện pha lê (Hoa lệ, Thanh lịch, Dễ thương)</option>
+                        <option value="">-- Chọn chủ đề để điền hệ số --</option>
+                        <optgroup label="Nhóm Đơn Giản / Năng Động">
+                            <option value="tiecvenbien">Tiệc Ven Biển</option>
+                            <option value="vanphong">Ngôi Sao Văn Phòng</option>
+                            <option value="noel">Noel Đoàn Viên</option>
+                            <option value="vandung">Vận Động</option>
+                            <option value="xuan">Chuyến Du Xuân</option>
+                            <option value="he">Chuyện Ngày Hè</option>
+                            <option value="thethao">Liên Hoan Mùa Hè</option>
+                            <option value="thamtu">Sherlock Holmes</option>
+                            <option value="rock">Phòng Hòa Nhạc</option>
+                            <option value="thanhxuan">Thành Thiếu Nữ</option>
+                        </optgroup>
+                        <optgroup label="Nhóm Hoa Lệ / Thanh Lịch">
+                            <option value="tiectra">Giao Thời</option>
+                            <option value="datiec">Nữ Vương</option>
+                            <option value="nuvuong">Ngọn Lửa Ngày Đông</option>
+                            <option value="ngoisao">Vũ Hội Cung Đình</option>
+                            <option value="tuyet">Công Viên Cổ Tích</option>
+                            <option value="kythao">Đẹp Tuyệt Trần</option>
+                            <option value="phale">Đẹp Thanh Tú</option>
+                        </optgroup>
                     </select>
                 </label>
             </div>
@@ -66,7 +70,7 @@
                 <label>Trưởng thành: <input type="number" id="w-mature" value="0" step="0.1"></label>
             </div>
 
-            <button class="btn-calc" onclick="suggestBestOutfit()">TÌM ĐỒ & TÍNH TỔNG ĐIỂM</button>
+            <button class="btn-calc" onclick="suggestBestOutfit()">TÌM ĐỒ MẠNH NHẤT</button>
             
             <div id="result-box" class="result-container" style="display:none;">
                 <div class="total-score-header"><h3>Tổng điểm dự kiến: <span id="total-score-val">0</span></h3></div>
