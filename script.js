@@ -1,7 +1,7 @@
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvuIgcVvxltqjqcALb8tpaG-pmhY7VmV9G7AB0STX4964cPnLbG9Vfirr5N2fVoEEAkjCepvqxFtvg/pub?output=csv';
 
 let clothingData = [];
-let userInventory = JSON.parse(localStorage.getItem('my_nikki_items')) || [];
+let userInventory = [];
 const scoreMap = { 'SS': 5000, 'S': 4000, 'A': 3000, 'B': 2000, 'C': 1000, '': 0 };
 
 async function init() {
@@ -10,20 +10,16 @@ async function init() {
         const data = await response.text();
         const rows = data.split('\n').slice(1);
 
-        // XÓA DỮ LIỆU CŨ TRƯỚC KHI ĐỌC SHEET (Để ép cập nhật từ cột Owned)
+        // Reset kho đồ để cập nhật hoàn toàn theo cột Owned (Cột D)
         userInventory = []; 
 
         clothingData = rows.map(row => {
-            // Sử dụng regex để tách cột chính xác (tránh lỗi nếu tên đồ có dấu phẩy)
             const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); 
             if (c.length < 5) return null;
 
             const itemId = c[0]?.trim();
-            
-            // KIỂM TRA CỘT D (Chỉ số 3):
-            // Chuyển về chữ hoa và so sánh với 'TRUE'
-            const ownedStatus = c[3]?.trim().toUpperCase();
-            const isOwnedInSheet = (ownedStatus === 'TRUE');
+            // Cột D là Owned (index 3)
+            const isOwnedInSheet = c[3]?.trim().toUpperCase() === 'TRUE';
 
             if (isOwnedInSheet && itemId) {
                 userInventory.push(itemId);
@@ -32,7 +28,7 @@ async function init() {
             return {
                 id: itemId,
                 image: c[1]?.trim() || 'https://via.placeholder.com/45',
-                name: c[2]?.trim().replace(/"/g, ""), // Xóa dấu ngoặc kép nếu có
+                name: c[2]?.trim().replace(/"/g, ""),
                 type: c[4]?.trim().toLowerCase(),
                 stats: {
                     gorgeous: scoreMap[c[6]?.trim()] || 0,
@@ -49,22 +45,39 @@ async function init() {
             };
         }).filter(i => i && i.id);
 
-        // Cập nhật lại kho đồ vào LocalStorage
         localStorage.setItem('my_nikki_items', JSON.stringify(userInventory));
 
+        // Gọi các hàm hiển thị
         renderTabs();
-        showCategory(clothingData[0]?.type);
+        if (clothingData.length > 0) {
+            showCategory(clothingData[0].type);
+        }
     } catch (e) { 
         console.error("Lỗi tải dữ liệu:", e); 
     }
 }
 
+// HÀM TẠO CÁC NÚT LOẠI ĐỒ (Dòng này bị thiếu trong code cũ của bạn)
+function renderTabs() {
+    const cats = [...new Set(clothingData.map(i => i.type))];
+    const container = document.getElementById('category-tabs');
+    if (container) {
+        container.innerHTML = cats.map(cat => 
+            `<button class="tab-btn" onclick="showCategory('${cat}')">${cat.toUpperCase()}</button>`
+        ).join('');
+    }
+}
+
+// HÀM HIỂN THỊ DANH SÁCH ĐỒ
 function showCategory(type) {
     const list = document.getElementById('item-lists');
+    if (!list) return;
+
     const items = clothingData.filter(i => i.type === type);
     
-    // Cập nhật trạng thái nút Active
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === type.toLowerCase()));
+    document.querySelectorAll('.tab-btn').forEach(b => 
+        b.classList.toggle('active', b.innerText.toLowerCase() === type.toLowerCase())
+    );
 
     list.innerHTML = items.map(item => `
         <label class="item-checkbox">
@@ -117,4 +130,5 @@ function suggestBestOutfit() {
     document.getElementById('result-box').style.display = (resList.innerHTML) ? 'block' : 'none';
 }
 
+// Chạy khởi tạo
 init();
