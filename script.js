@@ -11,10 +11,20 @@ async function init() {
         const rows = data.split('\n').slice(1);
 
         clothingData = rows.map(row => {
-            const c = row.split(','); // Tách cột
+            const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Tách cột an toàn
             if (c.length < 5) return null;
+
+            const itemId = c[0]?.trim();
+            const isOwnedInSheet = c[3]?.trim().toUpperCase() === 'TRUE'; // Cột D: Owned
+
+            // LOGIC TỰ ĐỘNG TICK: 
+            // Nếu trong Sheet ghi TRUE và món đồ chưa có trong kho tạm, thì thêm vào
+            if (isOwnedInSheet && !userInventory.includes(itemId)) {
+                userInventory.push(itemId);
+            }
+
             return {
-                id: c[0]?.trim(),
+                id: itemId,
                 image: c[1]?.trim() || 'https://via.placeholder.com/45',
                 name: c[2]?.trim(),
                 type: c[4]?.trim(),
@@ -32,6 +42,9 @@ async function init() {
                 }
             };
         }).filter(i => i && i.id);
+
+        // Lưu lại vào LocalStorage để đồng bộ luôn
+        localStorage.setItem('my_nikki_items', JSON.stringify(userInventory));
 
         renderTabs();
         showCategory(clothingData[0]?.type);
