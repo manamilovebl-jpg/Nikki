@@ -3,39 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Nikki Info - Vietnam Version</title>
+    <title>My Nikki Info - VN Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Ngôi Sao Thời Trang - Phối Đồ Cá Nhân</h1>
-            <p>Dữ liệu kết nối trực tiếp từ Google Sheets của bạn</p>
+            <h1>Ngôi Sao Thời Trang - Phối Đồ Khu Thi Đấu</h1>
+            <p>Dữ liệu đồng bộ trực tiếp từ Google Sheets</p>
         </header>
 
         <section class="inventory-section">
-            <h2>1. Cập Nhật Kho Đồ (Inventory)</h2>
-            <div id="category-tabs" class="tabs-container">
-                </div>
+            <h2>1. Kho Đồ Cá Nhân</h2>
+            <div id="category-tabs" class="tabs-container"></div>
             <div id="item-lists" class="items-grid">
                 <p style="text-align:center; padding:20px;">Đang tải dữ liệu từ Sheets...</p>
             </div>
-            <button class="btn-save" onclick="saveInventory()">LƯU KHO ĐỒ CỦA TÔI</button>
+            <button class="btn-save" onclick="saveInventory()">LƯU THAY ĐỔI KHO ĐỒ</button>
         </section>
 
         <section class="calc-section">
-            <h2>2. Gợi Ý Vượt Ải Tối ƯU</h2>
-            <div class="weights-grid">
-                <label>Simple: <input type="number" id="w-simple" value="1.5" step="0.1"></label>
-                <label>Pure: <input type="number" id="w-pure" value="1.5" step="0.1"></label>
-                <label>Elegant: <input type="number" id="w-elegance" value="1.0" step="0.1"></label>
-                <label>Cool: <input type="number" id="w-cool" value="1.0" step="0.1"></label>
-                <label>Mature: <input type="number" id="w-mature" value="0.5" step="0.1"></label>
+            <h2>2. Tính Điểm Tối Ưu</h2>
+            <div class="arena-picker">
+                <label><b>Chọn Chủ đề Khu Thi Đấu:</b> 
+                    <select id="arena-select" onchange="applyArenaWeights()">
+                        <option value="">-- Tự nhập hệ số --</option>
+                        <option value="xuan">Chuyến đi xuân (Đơn giản, Năng động, Dễ thương)</option>
+                        <option value="he">Chuyện bên bờ biển (Đơn giản, Trong sáng, Mát mẻ)</option>
+                        <option value="noel">Đêm Noel (Đơn giản, Trong sáng, Giữ ấm)</option>
+                        <option value="vanphong">Cung cách văn phòng (Đơn giản, Thanh lịch, Trưởng thành)</option>
+                        <option value="thethao">Trận đấu thể thao (Đơn giản, Năng động, Dễ thương)</option>
+                        <option value="thamtu">Thám tử (Đơn giản, Thanh lịch, Trưởng thành)</option>
+                        <option value="rock">Cây Rock (Đơn giản, Năng động, Gợi cảm)</option>
+                        <option value="thanhxuan">Thanh xuân tươi đẹp (Đơn giản, Trong sáng, Dễ thương)</option>
+                        <option value="vandung">Vận động (Đơn giản, Năng động, Gợi cảm)</option>
+                        <option value="tiectra">Tiệc trà rừng rậm (Hoa lệ, Trong sáng, Dễ thương)</option>
+                        <option value="datiec">Dạ tiệc (Hoa lệ, Thanh lịch, Gợi cảm)</option>
+                        <option value="nuvuong">Nữ vương thanh cao (Hoa lệ, Thanh lịch, Trưởng thành)</option>
+                        <option value="ngoisao">Ngôi sao thực thụ (Hoa lệ, Năng động, Sexy)</option>
+                        <option value="tuyet">Tuyệt thế giai nhân (Hoa lệ, Thanh lịch, Trong sáng)</option>
+                        <option value="kythao">Kỳ thảo vườn xuân (Hoa lệ, Thanh lịch, Trong sáng)</option>
+                        <option value="khoahoa">Khúc khải hoàn (Hoa lệ, Thanh lịch, Sexy)</option>
+                        <option value="phale">Cung điện pha lê (Hoa lệ, Thanh lịch, Dễ thương)</option>
+                    </select>
+                </label>
             </div>
-            <button class="btn-calc" onclick="suggestBestOutfit()">TÌM ĐỒ MẠNH NHẤT TRONG KHO</button>
+
+            <div class="tag-filter">
+                <label>Tag yêu cầu: <select id="tag-select"><option value="">-- Không có Tag --</option></select></label>
+            </div>
+
+            <div class="weights-grid">
+                <label>Đơn giản: <input type="number" id="w-simple" value="0" step="0.1"></label>
+                <label>Hoa lệ: <input type="number" id="w-gorgeous" value="0" step="0.1"></label>
+                <hr><label>Trong sáng: <input type="number" id="w-pure" value="0" step="0.1"></label>
+                <label>Gợi cảm: <input type="number" id="w-sexy" value="0" step="0.1"></label>
+                <hr><label>Thanh lịch: <input type="number" id="w-elegance" value="0" step="0.1"></label>
+                <label>Năng động: <input type="number" id="w-lively" value="0" step="0.1"></label>
+                <hr><label>Giữ ấm: <input type="number" id="w-warm" value="0" step="0.1"></label>
+                <label>Mát mẻ: <input type="number" id="w-cool" value="0" step="0.1"></label>
+                <hr><label>Dễ thương: <input type="number" id="w-cute" value="0" step="0.1"></label>
+                <label>Trưởng thành: <input type="number" id="w-mature" value="0" step="0.1"></label>
+            </div>
+
+            <button class="btn-calc" onclick="suggestBestOutfit()">TÌM ĐỒ & TÍNH TỔNG ĐIỂM</button>
             
             <div id="result-box" class="result-container" style="display:none;">
-                <h3>Set đồ gợi ý cho bạn:</h3>
+                <div class="total-score-header"><h3>Tổng điểm dự kiến: <span id="total-score-val">0</span></h3></div>
                 <ul id="suggestion-list"></ul>
             </div>
         </section>
