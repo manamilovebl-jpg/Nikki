@@ -10,24 +10,30 @@ async function init() {
         const data = await response.text();
         const rows = data.split('\n').slice(1);
 
+        // XÓA DỮ LIỆU CŨ TRƯỚC KHI ĐỌC SHEET (Để ép cập nhật từ cột Owned)
+        userInventory = []; 
+
         clothingData = rows.map(row => {
-            const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Tách cột an toàn
+            // Sử dụng regex để tách cột chính xác (tránh lỗi nếu tên đồ có dấu phẩy)
+            const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); 
             if (c.length < 5) return null;
 
             const itemId = c[0]?.trim();
-            const isOwnedInSheet = c[3]?.trim().toUpperCase() === 'TRUE'; // Cột D: Owned
+            
+            // KIỂM TRA CỘT D (Chỉ số 3):
+            // Chuyển về chữ hoa và so sánh với 'TRUE'
+            const ownedStatus = c[3]?.trim().toUpperCase();
+            const isOwnedInSheet = (ownedStatus === 'TRUE');
 
-            // LOGIC TỰ ĐỘNG TICK: 
-            // Nếu trong Sheet ghi TRUE và món đồ chưa có trong kho tạm, thì thêm vào
-            if (isOwnedInSheet && !userInventory.includes(itemId)) {
+            if (isOwnedInSheet && itemId) {
                 userInventory.push(itemId);
             }
 
             return {
                 id: itemId,
                 image: c[1]?.trim() || 'https://via.placeholder.com/45',
-                name: c[2]?.trim(),
-                type: c[4]?.trim(),
+                name: c[2]?.trim().replace(/"/g, ""), // Xóa dấu ngoặc kép nếu có
+                type: c[4]?.trim().toLowerCase(),
                 stats: {
                     gorgeous: scoreMap[c[6]?.trim()] || 0,
                     simple: scoreMap[c[7]?.trim()] || 0,
@@ -43,19 +49,14 @@ async function init() {
             };
         }).filter(i => i && i.id);
 
-        // Lưu lại vào LocalStorage để đồng bộ luôn
+        // Cập nhật lại kho đồ vào LocalStorage
         localStorage.setItem('my_nikki_items', JSON.stringify(userInventory));
 
         renderTabs();
         showCategory(clothingData[0]?.type);
-    } catch (e) { console.error("Lỗi tải Sheet:", e); }
-}
-
-function renderTabs() {
-    const cats = [...new Set(clothingData.map(i => i.type))];
-    document.getElementById('category-tabs').innerHTML = cats.map(cat => 
-        `<button class="tab-btn" onclick="showCategory('${cat}')">${cat.toUpperCase()}</button>`
-    ).join('');
+    } catch (e) { 
+        console.error("Lỗi tải dữ liệu:", e); 
+    }
 }
 
 function showCategory(type) {
