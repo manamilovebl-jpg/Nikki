@@ -6,22 +6,14 @@
     <title>NSTT Pro - Top 20 & Best Set</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body id="main-body">
+<body>
     <div class="container">
         <header>
-            <h1>NSTT - Công Cụ Phối Đồ Chuyên Nghiệp</h1>
-            <p>So sánh đồ cá nhân & Bảng xếp hạng toàn Server</p>
+            <h1>NSTT - Công Cụ Phối Đồ Pro</h1>
+            <p>Dữ liệu chuẩn Nikki Info & Tên Tiếng Việt</p>
         </header>
 
-        <section class="inventory-section">
-            <h2>1. Kho Đồ Cá Nhân</h2>
-            <div id="category-tabs" class="tabs-container"></div>
-            <div id="item-lists" class="items-grid"></div>
-            <button class="btn-save" onclick="saveInventory()">LƯU KHO ĐỒ</button>
-        </section>
-
         <section class="calc-section">
-            <h2>2. Tùy Chỉnh Chỉ Số</h2>
             <div class="arena-picker">
                 <select id="arena-select" onchange="applyArenaWeights()">
                     <option value="">-- Chọn Chủ Đề Khu Thi Đấu --</option>
@@ -46,46 +38,42 @@
             </div>
 
             <div class="tag-filter">
-                <label>Tag yêu cầu: <select id="tag-select"><option value="">-- Không có Tag --</option></select></label>
+                <label>Tag: <select id="tag-select"><option value="">-- Chọn Tag --</option></select></label>
             </div>
 
             <div class="weights-grid">
-                <label>Đơn giản: <input type="number" id="w-simple" value="0.1" step="0.1"></label>
-                <label>Hoa lệ: <input type="number" id="w-gorgeous" value="0.1" step="0.1"></label>
-                <hr>
-                <label>Trong sáng: <input type="number" id="w-pure" value="0.1" step="0.1"></label>
-                <label>Gợi cảm: <input type="number" id="w-sexy" value="0.1" step="0.1"></label>
-                <hr>
-                <label>Thanh lịch: <input type="number" id="w-elegance" value="0.1" step="0.1"></label>
-                <label>Năng động: <input type="number" id="w-lively" value="0.1" step="0.1"></label>
-                <hr>
-                <label>Giữ ấm: <input type="number" id="w-warm" value="0.1" step="0.1"></label>
-                <label>Mát mẻ: <input type="number" id="w-cool" value="0.1" step="0.1"></label>
-                <hr>
-                <label>Dễ thương: <input type="number" id="w-cute" value="0.1" step="0.1"></label>
-                <label>Trưởng thành: <input type="number" id="w-mature" value="0.1" step="0.1"></label>
+                <label>Giản: <input type="number" id="w-simple" value="0" step="0.1"></label>
+                <label>Hoa: <input type="number" id="w-gorgeous" value="0" step="0.1"></label>
+                <label>Sáng: <input type="number" id="w-pure" value="0" step="0.1"></label>
+                <label>Cảm: <input type="number" id="w-sexy" value="0" step="0.1"></label>
+                <label>Lịch: <input type="number" id="w-elegance" value="0" step="0.1"></label>
+                <label>Động: <input type="number" id="w-lively" value="0" step="0.1"></label>
+                <label>Ấm: <input type="number" id="w-warm" value="0" step="0.1"></label>
+                <label>Mát: <input type="number" id="w-cool" value="0" step="0.1"></label>
+                <label>Thương: <input type="number" id="w-cute" value="0" step="0.1"></label>
+                <label>Thành: <input type="number" id="w-mature" value="0" step="0.1"></label>
             </div>
-
             <button class="btn-calc" onclick="calculateEverything()">PHÂN TÍCH ĐỒ</button>
         </section>
 
         <div id="result-container" style="display:none;">
-            <section class="best-set-section">
-                <div class="header-box pink">
-                    <h2>BỘ ĐỒ MẠNH NHẤT BẠN CÓ</h2>
-                    <p>Tổng điểm dự kiến: <span id="total-score-val">0</span></p>
-                </div>
-                <ul id="best-set-list" class="res-list"></ul>
-            </section>
-
-            <section class="top-ranking-section">
-                <div class="header-box blue">
-                    <h2>TOP 20 TOÀN GAME (ADVANCED)</h2>
-                    <p>Những món mạnh nhất hiện nay</p>
-                </div>
-                <div id="advanced-guide"></div>
-            </section>
+            <div class="result-header">
+                <h2>BỘ ĐỒ MẠNH NHẤT: <span id="total-score-val">0</span></h2>
+            </div>
+            <ul id="best-set-list" class="res-list"></ul>
+            
+            <h2 class="section-title">TOP 20 RANKINGS (ADVANCED)</h2>
+            <div id="advanced-guide"></div>
         </div>
+
+        <section class="inventory-section">
+            <div class="inventory-header">
+                <h2>KHO ĐỒ CỦA TÔI</h2>
+                <button class="btn-save" onclick="saveInventory()">LƯU TỦ ĐỒ</button>
+            </div>
+            <div id="category-tabs" class="tabs-container"></div>
+            <div id="item-lists" class="items-grid"></div>
+        </section>
     </div>
     <script src="script.js"></script>
 </body>
