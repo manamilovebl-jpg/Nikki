@@ -1,21 +1,39 @@
-// Tìm đoạn tạo guideHtml trong hàm calculateEverything và thay bằng:
-guideHtml += `
-    <div class="guide-cat">
-        <div class="guide-title" onclick="this.nextElementSibling.classList.toggle('active')">
-            ${type.toUpperCase()} <span>▼</span>
-        </div>
-        <ul class="guide-list active">
-            ${top20.map((i, idx) => `
-                <li class="${userInventory.includes(i.id) ? 'is-owned' : 'not-owned'}">
-                    <img src="${i.image}" class="guide-img" onerror="this.src='https://via.placeholder.com/50'">
-                    <div class="guide-info">
-                        <span class="guide-name" title="${i.name}">${i.name}</span>
-                        <div class="guide-meta">
-                            <small style="color: #aaa;">★${i.star} ${userInventory.includes(i.id) ? '✅' : ''}</small>
-                            <span class="guide-score-val">${i.finalScore.toLocaleString()}</span>
-                        </div>
-                    </div>
-                </li>
-            `).join('')}
-        </ul>
-    </div>`;
+:root { --pink: #ff4d6d; --blue: #00b4d8; --bg: #0f0f0f; --card: #1a1a1a; --item-bg: #252525; --text: #f0f0f0; }
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 10px; margin: 0; }
+.container { max-width: 1000px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 15px; }
+
+header h1 { color: var(--pink); text-align: center; margin-bottom: 5px; }
+header p { text-align: center; color: #888; font-size: 0.9rem; margin-top: 0; }
+
+.input-group { display: flex; gap: 10px; margin-bottom: 10px; }
+.input-group select { flex: 1; padding: 10px; background: #333; color: white; border: 1px solid #444; border-radius: 8px; }
+
+.weights-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #222; padding: 12px; border-radius: 10px; margin-bottom: 15px; }
+.weights-grid input { width: 45px; background: #333; border: 1px solid #444; color: #fff; padding: 4px; border-radius: 4px; }
+
+/* Tủ đồ - Grid ô vuông */
+.items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; height: 500px; overflow-y: auto; background: #111; padding: 15px; border-radius: 10px; }
+.item-checkbox { background: var(--item-bg); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; border: 2px solid transparent; position: relative; transition: 0.2s; }
+.item-checkbox input { position: absolute; top: 8px; right: 8px; transform: scale(1.2); }
+.item-checkbox.is-checked { border-color: var(--pink); background: #2d1a1e; }
+
+.img-square { width: 80px; height: 80px; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px; background: #333; margin-bottom: 8px; border: 1px solid #444; }
+.item-name { font-size: 0.75rem; font-weight: bold; line-height: 1rem; height: 2rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* Rankings 2 cột */
+.guide-cat { margin-bottom: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
+.guide-title { background: #333; padding: 12px; font-weight: bold; color: var(--blue); cursor: pointer; display: flex; justify-content: space-between; }
+.guide-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; background: #151515; list-style: none; margin: 0; }
+.guide-list li { display: flex; align-items: center; gap: 12px; background: #222; padding: 10px; border-radius: 10px; border-left: 4px solid #444; }
+.is-owned { border-left-color: #4caf50 !important; }
+.not-owned { border-left-color: #f44336 !important; opacity: 0.8; }
+.score-tag { color: #ffd700; font-weight: bold; font-size: 0.85rem; margin-left: auto; }
+
+/* Best Set */
+.best-set-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; list-style: none; padding: 0; }
+.best-set-grid li { display: flex; align-items: center; gap: 12px; background: #2d1a1e; border: 1px solid var(--pink); padding: 12px; border-radius: 10px; }
+
+.btn-main { width: 100%; background: var(--pink); color: #fff; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+.tabs-container { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.tab-btn { background: #333; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+.tab-btn.active { background: var(--pink); }
