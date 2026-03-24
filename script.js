@@ -1,14 +1,26 @@
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvuIgcVvxltqjqcALb8tpaG-pmhY7VmV9G7AB0STX4964cPnLbG9Vfirr5N2fVoEEAkjCepvqxFtvg/pub?output=csv';
 let clothingData = [], userInventory = [];
 
-// BẢNG ĐIỂM CHI TIẾT (Đã tinh chỉnh để sát với chỉ số ẩn)
-const baseScores = {
-    'sss': { 'dress': 5820, 'top': 2910, 'bottom': 2910, 'hair': 1450, 'shoes': 1450, 'coat': 1450, 'accessory': 580, 'makeup': 580 },
-    'ss':  { 'dress': 4850, 'top': 2425, 'bottom': 2425, 'hair': 1210, 'shoes': 1210, 'coat': 1210, 'accessory': 485, 'makeup': 485 },
-    's':   { 'dress': 4050, 'top': 2025, 'bottom': 2025, 'hair': 1010, 'shoes': 1010, 'coat': 1010, 'accessory': 405, 'makeup': 405 },
-    'a':   { 'dress': 3050, 'top': 1525, 'bottom': 1525, 'hair': 760,  'shoes': 760,  'coat': 760,  'accessory': 305, 'makeup': 305 },
-    'b':   { 'dress': 2050, 'top': 1025, 'bottom': 1025, 'hair': 510,  'shoes': 510,  'coat': 510,  'accessory': 205, 'makeup': 205 },
-    'c':   { 'dress': 1050, 'top': 525,  'bottom': 525,  'hair': 260,  'shoes': 260,  'coat': 260,  'accessory': 105, 'makeup': 105 }
+// BẢNG ĐIỂM GỐC THEO RANK (Dựa trên tab Thông Tin)
+const rankBase = {
+    'sss': 600, // Dự phòng SSS
+    'ss': 490,
+    's': 400,
+    'a': 320,
+    'b': 240,
+    'c': 160
+};
+
+// HỆ SỐ NHÂN THEO VỊ TRÍ (Multiplier)
+const typeMultipliers = {
+    'dress': 10,
+    'top': 5,
+    'bottom': 5,
+    'hair': 2.5,
+    'shoes': 2.5,
+    'coat': 2.5,
+    'makeup': 2.5,
+    'accessory': 1 // Tất cả các loại phụ kiện khác
 };
 
 const arenaData = {
@@ -31,49 +43,55 @@ const arenaData = {
     "phale": { gorgeous: 1.33, elegance: 1.33, cute: 1.33, pure: 1.0, cool: 1.0 }
 };
 
-function getNikkiScore(rank, type, star) {
+// HÀM TÍNH ĐIỂM CHUẨN THEO BẢNG TÍNH CỦA BẠN
+function calculateNikkiScore(rank, type, star) {
     if (!rank) return 0;
     const r = rank.trim().toLowerCase();
     const t = type.trim().toLowerCase();
     
-    let cat = 'accessory';
-    let penalty = 1.0; 
+    // 1. Lấy điểm Base trung bình từ Rank
+    let base = rankBase[r] || 0;
+    
+    // 2. Lấy hệ số Multiplier theo vị trí
+    let multiplier = typeMultipliers[t] || 1; // Mặc định là Accessory (x1)
+    
+    // 3. Thưởng thêm theo số Sao (Dựa trên logic game: đồ nhiều sao base cao hơn)
+    const starBonus = (parseInt(star) || 0) * 5; 
 
-    if (t === 'dress') cat = 'dress';
-    else if (t === 'top' || t === 'bottom') cat = 'top';
-    else if (['hair', 'shoes', 'coat'].includes(t)) cat = 'hair';
-    else if (t === 'makeup') cat = 'makeup';
-    else {
-        cat = 'accessory';
-        penalty = 0.4; // PHẠT 60% ĐIỂM CHO PHỤ KIỆN (Giống Nikki Info)
+    // 4. Công thức: (Base + Star) * Multiplier
+    let finalBase = (base + starBonus) * multiplier;
+
+    // 5. Penalty cho Accessory (60% Penalty = x0.4 điểm)
+    if (multiplier === 1) {
+        finalBase *= 0.4;
     }
 
-    const base = (baseScores[r] && baseScores[r][cat]) ? baseScores[r][cat] : 0;
-    const starBonus = (parseInt(star) || 0) * 12; // Tăng nhẹ bonus sao
-
-    return base > 0 ? ((base + starBonus) * penalty) : 0;
+    return finalBase;
 }
-
-// ... (Các hàm init, renderUI, showCat giữ nguyên như bản trước) ...
 
 async function init() {
     try {
         const response = await fetch(SHEET_URL);
-        const data = await response.text();
-        const rows = data.split('\n').slice(1);
+        const csvData = await response.text();
+        const rows = csvData.split('\n').slice(1);
         userInventory = []; 
+
         clothingData = rows.map(row => {
             const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            if (c.length < 5) return null;
+            if (c.length < 15) return null;
+            
             const id = c[0]?.trim();
             const type = c[4]?.trim().toLowerCase();
-            const stars = c[5]?.trim();
+            const star = c[5]?.trim();
+            
             if (c[3]?.trim().toUpperCase() === 'TRUE') userInventory.push(id);
+
             return {
-                id, image: c[1]?.trim(), name: c[2]?.trim().replace(/"/g, ""), type, star: stars,
+                id, image: c[1]?.trim(), name: c[2]?.trim().replace(/"/g, ""), type, star,
                 tags: [c[16]?.trim(), c[17]?.trim()].filter(t => t),
                 stats: {
-                    gorgeous: c[6], simple: c[7], elegance: c[8], lively: c[9], mature: c[10], cute: c[11], sexy: c[12], pure: c[13], warm: c[14], cool: c[15]
+                    gorgeous: c[6], simple: c[7], elegance: c[8], lively: c[9], mature: c[10], 
+                    cute: c[11], sexy: c[12], pure: c[13], warm: c[14], cool: c[15]
                 }
             };
         }).filter(i => i);
@@ -83,9 +101,12 @@ async function init() {
 
 function renderUI() {
     const cats = [...new Set(clothingData.map(i => i.type))];
-    document.getElementById('category-tabs').innerHTML = cats.map(cat => `<button class="tab-btn" onclick="showCat('${cat}')">${cat.toUpperCase()}</button>`).join('');
+    document.getElementById('category-tabs').innerHTML = cats.map(cat => 
+        `<button class="tab-btn" onclick="showCat('${cat}')">${cat.toUpperCase()}</button>`
+    ).join('');
     const allTags = [...new Set(clothingData.flatMap(i => i.tags))].sort();
-    document.getElementById('tag-select').innerHTML = '<option value="">-- Không Tag --</option>' + allTags.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('tag-select').innerHTML = '<option value="">-- Không Tag --</option>' + 
+        allTags.map(t => `<option value="${t}">${t}</option>`).join('');
     showCat(cats[0]);
 }
 
@@ -104,11 +125,16 @@ function showCat(type) {
 function calculateEverything() {
     const stag = document.getElementById('tag-select').value;
     const w = {
-        gorgeous: parseFloat(document.getElementById('w-gorgeous').value)||0.1, simple: parseFloat(document.getElementById('w-simple').value)||0.1,
-        pure: parseFloat(document.getElementById('w-pure').value)||0.1, sexy: parseFloat(document.getElementById('w-sexy').value)||0.1,
-        elegance: parseFloat(document.getElementById('w-elegance').value)||0.1, lively: parseFloat(document.getElementById('w-lively').value)||0.1,
-        warm: parseFloat(document.getElementById('w-warm').value)||0.1, cool: parseFloat(document.getElementById('w-cool').value)||0.1,
-        cute: parseFloat(document.getElementById('w-cute').value)||0.1, mature: parseFloat(document.getElementById('w-mature').value)||0.1
+        gorgeous: parseFloat(document.getElementById('w-gorgeous').value) || 0.1,
+        simple: parseFloat(document.getElementById('w-simple').value) || 0.1,
+        pure: parseFloat(document.getElementById('w-pure').value) || 0.1,
+        sexy: parseFloat(document.getElementById('w-sexy').value) || 0.1,
+        elegance: parseFloat(document.getElementById('w-elegance').value) || 0.1,
+        lively: parseFloat(document.getElementById('w-lively').value) || 0.1,
+        warm: parseFloat(document.getElementById('w-warm').value) || 0.1,
+        cool: parseFloat(document.getElementById('w-cool').value) || 0.1,
+        cute: parseFloat(document.getElementById('w-cute').value) || 0.1,
+        mature: parseFloat(document.getElementById('w-mature').value) || 0.1
     };
 
     const types = [...new Set(clothingData.map(i => i.type))];
@@ -117,7 +143,10 @@ function calculateEverything() {
     types.forEach(type => {
         let scoredItems = clothingData.filter(i => i.type === type).map(item => {
             let s = 0;
-            for (let k in w) { s += getNikkiScore(item.stats[k], type, item.star) * w[k]; }
+            for (let k in w) {
+                const baseValue = calculateNikkiScore(item.stats[k], type, item.star);
+                s += baseValue * w[k];
+            }
             if (stag && item.tags.includes(stag)) s *= 2;
             return { ...item, finalScore: Math.round(s) };
         }).sort((a,b) => b.finalScore - a.finalScore);
