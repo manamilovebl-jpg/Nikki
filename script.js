@@ -1,7 +1,7 @@
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvuIgcVvxltqjqcALb8tpaG-pmhY7VmV9G7AB0STX4964cPnLbG9Vfirr5N2fVoEEAkjCepvqxFtvg/pub?output=csv';
 let clothingData = [], userInventory = [];
 
-// 1. BẢNG BASE SCORE (Giữ nguyên từ ảnh của bạn)
+// 1. BẢNG BASE SCORE (Dựa trên ảnh của bạn)
 const baseScoreTable = {
     'sss+': { dress: 6660, top: 3330, hair: 1665, accessory: 666 },
     'sss':  { dress: 6000, top: 3000, hair: 1500, accessory: 600 },
@@ -27,48 +27,52 @@ const baseScoreTable = {
 const rarityMultipliers = { 6: 1.15, 5: 1, 4: 0.8, 3: 0.6, 2: 0.45, 1: 0.3 };
 const qualityMultipliers = { 'đồ cực phẩm (top)': 1.25, 'đồ cao cấp': 1.1, 'đồ thông thường': 1 };
 
-// 2. KHỞI TẠO DỮ LIỆU (Sửa lỗi Load)
+// 2. HỆ SỐ TRỌNG SỐ ẢI (Dựa chính xác trên bảng ảnh bạn gửi)
+const arenaData = {
+    "kythao": { gorgeous: 1.33, simple: 0, pure: 1.33, sexy: 0, elegance: 1.33, lively: 0, warm: 0, cool: 0.67, cute: 0, mature: 1 }, // Đẹp tuyệt trần
+    "noel": { gorgeous: 0, simple: 1.33, pure: 1.33, sexy: 0, elegance: 0, lively: 0.67, warm: 1.33, cool: 0, cute: 0, mature: 1 }, // Noel đoàn viên
+    "phale": { gorgeous: 0, simple: 1.33, pure: 1.33, sexy: 0, elegance: 1.33, lively: 0, warm: 0, cool: 1, cute: 1.33, mature: 0.67 }, // Đẹp thanh tú
+    "tuyet": { gorgeous: 1.33, simple: 0, pure: 1, sexy: 0, elegance: 1.33, lively: 0, warm: 0, cool: 0.67, cute: 1.33, mature: 0 }, // Công viên cổ tích
+    "rock": { gorgeous: 1.33, simple: 0, pure: 0, sexy: 1, elegance: 1.33, lively: 0, warm: 0.67, cool: 0, cute: 0, mature: 1.33 }, // Phòng hòa nhạc
+    "thanhxuan": { gorgeous: 0, simple: 0.67, pure: 1.33, sexy: 0, elegance: 1.33, lively: 1, warm: 0, cool: 0, cute: 0, mature: 1.33 }, // Thành thiếu nữ
+    "tiecvenbien": { gorgeous: 0, simple: 0.67, pure: 0, sexy: 1.33, elegance: 0, lively: 1, warm: 0, cool: 1.33, cute: 1.33, mature: 0 }, // Tiệc ven biển
+    "tiectra": { gorgeous: 0.67, simple: 0, pure: 1.33, sexy: 0, elegance: 0, lively: 1.33, warm: 0, cool: 1, cute: 0, mature: 1.33 }, // Giao thời
+    "vanphong": { gorgeous: 0, simple: 1.33, pure: 0, sexy: 1, elegance: 1.33, lively: 0, warm: 0, cool: 0.67, cute: 0, mature: 1.33 }, // Ngôi sao văn phòng
+    "he": { gorgeous: 1.33, simple: 0, pure: 1, sexy: 0, elegance: 1.33, lively: 0, warm: 0, cool: 1.33, cute: 0, mature: 0.67 }, // Chuyện ngày hè
+    "xuan": { gorgeous: 1.33, simple: 0, pure: 1, sexy: 0, elegance: 1.33, lively: 1.33, warm: 0, cool: 0.67, cute: 0, mature: 0 }, // Chuyến du xuân
+    "vandung": { gorgeous: 0, simple: 1, pure: 0, sexy: 1.33, elegance: 0, lively: 1.33, warm: 1.33, cool: 0, cute: 0, mature: 0.67 }, // Vận động
+    "thethao": { gorgeous: 1.33, simple: 0, pure: 1.33, sexy: 0, elegance: 0, lively: 0.67, warm: 0, cool: 1.33, cute: 0, mature: 1 }, // Liên hoan ngày hè
+    "datiec": { gorgeous: 1.33, simple: 0, pure: 0, sexy: 1.33, elegance: 1.33, lively: 0, warm: 0, cool: 0, cute: 0, mature: 1 }, // Nữ vương
+    "nuvuong": { gorgeous: 0.67, simple: 0, pure: 0, sexy: 1.33, elegance: 0, lively: 1.33, warm: 1.33, cool: 0, cute: 0, mature: 1 }, // Ngọn lửa ngày đông
+    "thamtu": { gorgeous: 0, simple: 1.33, pure: 0.67, sexy: 1.33, elegance: 1.33, lively: 0, warm: 0, cool: 0, cute: 0, mature: 1.33 }, // Sherlock Holmes
+    "ngoisao": { gorgeous: 1.33, simple: 0, pure: 0, sexy: 1.33, elegance: 0, lively: 1.33, warm: 0, cool: 0.67, cute: 1, mature: 0 } // Vũ hội cung đình
+};
+
+// 3. KHỞI TẠO DỮ LIỆU
 async function init() {
     try {
         const response = await fetch(SHEET_URL);
         const csvText = await response.text();
-        
-        // Dùng Regex để tách CSV chuẩn kể cả khi có dấu phẩy trong ngoặc kép
         const rows = csvText.split(/\r?\n/).slice(1); 
         userInventory = []; 
 
         clothingData = rows.map(row => {
-            // Regex tách cột chuẩn CSV
             const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            if (c.length < 15) return null;
-
+            if (c.length < 20) return null;
             const id = c[0]?.trim();
             if (c[3]?.trim().toUpperCase() === 'TRUE') userInventory.push(id);
-
             return {
-                id: id,
-                image: c[1]?.trim() || '',
-                name: c[2]?.trim().replace(/"/g, ""),
-                type: c[4]?.trim().toLowerCase(),
-                star: c[5]?.trim(),
-                quality: c[19]?.trim() || 'đồ thông thường', // Cột T
+                id, image: c[1]?.trim() || '', name: c[2]?.trim().replace(/"/g, ""), type: c[4]?.trim().toLowerCase(),
+                star: c[5]?.trim(), quality: c[19]?.trim() || 'đồ thông thường',
                 tags: [c[16]?.trim(), c[17]?.trim()].filter(t => t && t !== ""),
-                stats: {
-                    gorgeous: c[6], simple: c[7], elegance: c[8], lively: c[9], mature: c[10], 
-                    cute: c[11], sexy: c[12], pure: c[13], warm: c[14], cool: c[15]
-                }
+                stats: { gorgeous: c[6], simple: c[7], elegance: c[8], lively: c[9], mature: c[10], cute: c[11], sexy: c[12], pure: c[13], warm: c[14], cool: c[15] }
             };
         }).filter(item => item && item.id);
-
-        console.log("Đã tải:", clothingData.length, "món đồ.");
         renderUI();
-    } catch (e) {
-        console.error("Lỗi load tủ đồ:", e);
-        document.getElementById('item-lists').innerHTML = "Lỗi kết nối Sheets. Hãy kiểm tra link Pub.";
-    }
+    } catch (e) { console.error("Lỗi:", e); }
 }
 
-// 3. LOGIC TÍNH ĐIỂM (Giữ nguyên bản Step-by-Step)
+// 4. HÀM TÍNH ĐIỂM GỐC
 function getBaseItemScore(rank, type, star, quality) {
     if (!rank) return 0;
     const r = rank.toLowerCase().trim();
@@ -87,10 +91,19 @@ function getBaseItemScore(rank, type, star, quality) {
     return base * rarityMod * qualityMod;
 }
 
+// 5. PENALTY PHỤ KIỆN
+function getPenalty(count) {
+    if (count <= 3) return 1;
+    if (count <= 5) return 0.95;
+    if (count <= 10) return 0.9;
+    if (count <= 15) return 0.8;
+    return 0.7;
+}
+
+// 6. TÍNH TOÁN KẾT QUẢ
 function calculateEverything() {
     const aid = document.getElementById('arena-select').value;
     const stag = document.getElementById('tag-select').value;
-    
     const w = {
         gorgeous: parseFloat(document.getElementById('w-gorgeous').value) || 0,
         simple: parseFloat(document.getElementById('w-simple').value) || 0,
@@ -120,6 +133,7 @@ function calculateEverything() {
                     itemTotal += Math.floor(base * w[attr]);
                 }
             });
+            // Tag quan trọng x2 (Có thể chỉnh hệ số này)
             if (stag && item.tags.includes(stag)) itemTotal = Math.floor(itemTotal * 2);
             return { ...item, finalScore: itemTotal };
         }).sort((a,b) => b.finalScore - a.finalScore);
@@ -129,14 +143,11 @@ function calculateEverything() {
             let s = best.finalScore;
             if (type.includes('accessory')) {
                 accCount++;
-                const penalties = [1, 1, 1, 0.95, 0.95, 0.9, 0.9, 0.9, 0.9, 0.9, 0.8]; // Ví dụ hệ số phạt
-                const p = accCount > 10 ? 0.7 : (penalties[accCount-1] || 0.7);
-                s = Math.floor(s * p);
+                s = Math.floor(s * getPenalty(accCount));
             }
             totalScore += s;
             bestHtml += `<li><img src="${best.image}" class="item-thumb"><div><b>${type.toUpperCase()}:</b> ${best.name}<br><small>Điểm: ${s.toLocaleString()}</small></div></li>`;
         }
-
         guideHtml += `<div class="guide-cat"><div class="guide-title" onclick="this.nextElementSibling.classList.toggle('active')">${type.toUpperCase()}</div>
         <ul class="guide-list">${scoredItems.slice(0,20).map((i,idx) => `<li class="${userInventory.includes(i.id)?'is-owned':'not-owned'}">#${idx+1} ${i.name} ★${i.star} [${i.finalScore.toLocaleString()}]</li>`).join('')}</ul></div>`;
     });
@@ -147,7 +158,7 @@ function calculateEverything() {
     document.getElementById('result-container').style.display = 'block';
 }
 
-// UI HELPERS (Giữ nguyên)
+// UI Helpers
 function renderUI() {
     const cats = [...new Set(clothingData.map(i => i.type))];
     document.getElementById('category-tabs').innerHTML = cats.map(cat => `<button class="tab-btn" onclick="showCat('${cat}')">${cat.toUpperCase()}</button>`).join('');
@@ -163,7 +174,12 @@ function showCat(type) {
 function toggleItem(id, own) { if(own) userInventory.push(id); else userInventory = userInventory.filter(i => i!==id); }
 function saveInventory() { localStorage.setItem('inventory', JSON.stringify(userInventory)); alert("Đã lưu!"); }
 function applyArenaWeights() {
-    // Tự động điền hệ số ải... (Phần này bạn dán lại arenaData từ bản trước vào là xong)
-    calculateEverything();
+    const aid = document.getElementById('arena-select').value;
+    const attrs = ['simple','gorgeous','pure','sexy','elegance','lively','warm','cool','cute','mature'];
+    attrs.forEach(a => document.getElementById(`w-${a}`).value = 0);
+    if (aid && arenaData[aid]) {
+        for (let k in arenaData[aid]) document.getElementById(`w-${k}`).value = arenaData[aid][k];
+        calculateEverything();
+    }
 }
 init();
