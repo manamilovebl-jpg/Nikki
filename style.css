@@ -1,33 +1,57 @@
-:root { --pink: #ff4d6d; --blue: #00b4d8; --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; }
-body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.5s; }
-.container { max-width: 1000px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+/* Layout cho danh sách Top 20 */
+.guide-list {
+    display: none; /* Mặc định ẩn, hiện khi nhấn tiêu đề */
+    grid-template-columns: 1fr 1fr; /* CHIA LÀM 2 CỘT */
+    gap: 10px;
+    padding: 10px;
+    background: #1a1a1a;
+    list-style: none;
+}
 
-/* Grid & Layout */
-.weights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #252525; padding: 15px; border-radius: 10px; margin: 15px 0; }
-.weights-grid hr { grid-column: span 2; border: 0; border-top: 1px solid #444; }
-.items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; height: 300px; overflow-y: auto; background: #151515; padding: 10px; border-radius: 8px; }
+.guide-list.active {
+    display: grid; /* Hiện theo dạng lưới khi active */
+}
 
-/* Items */
-.item-checkbox { display: flex; align-items: center; gap: 10px; background: #252525; padding: 8px; border-radius: 8px; border: 1px solid #333; cursor: pointer; }
-.item-thumb { width: 45px; height: 45px; border-radius: 5px; object-fit: cover; }
+.guide-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: #252525;
+    border-radius: 6px;
+    border: 1px solid #333;
+    font-size: 0.85rem;
+}
 
-/* Result Sections */
-.header-box { padding: 10px; border-radius: 10px; text-align: center; margin: 20px 0 10px; }
-.header-box.pink { background: var(--pink); color: white; }
-.header-box.blue { background: var(--blue); color: white; }
+/* Đồ đã có viền xanh, chưa có viền đỏ nhẹ */
+.is-owned { border-left: 4px solid #4caf50 !important; }
+.not-owned { border-left: 4px solid #f44336 !important; opacity: 0.7; }
 
-.res-list { list-style: none; padding: 0; background: #252525; border-radius: 10px; }
-.res-list li { display: flex; align-items: center; gap: 15px; padding: 10px; border-bottom: 1px solid #333; }
+.guide-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    object-fit: cover;
+    background: #333;
+}
 
-/* Top 20 Guide */
-.guide-cat { margin-bottom: 15px; border: 1px solid #333; border-radius: 8px; }
-.guide-title { background: #333; padding: 8px 15px; font-weight: bold; color: var(--blue); cursor: pointer; }
-.guide-list { display: none; list-style: none; padding: 0; background: #1a1a1a; }
-.guide-list.active { display: block; }
-.guide-list li { display: flex; align-items: center; padding: 8px 15px; border-bottom: 1px solid #222; font-size: 0.85rem; }
-.not-owned { opacity: 0.5; border-left: 3px solid #ff4444; } /* Đồ chưa có sẽ mờ đi */
-.is-owned { border-left: 3px solid #44ff44; } /* Đồ đã có hiện rõ */
+.guide-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
 
-.score-tag { margin-left: auto; font-weight: bold; color: #ffd700; }
-button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
-.btn-calc { background: var(--pink); color: white; font-size: 1.1rem; }
+.guide-name {
+    font-weight: bold;
+    color: #eee;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px; /* Tránh tràn chữ */
+}
+
+.guide-score-val {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
