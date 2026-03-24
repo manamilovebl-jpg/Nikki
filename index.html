@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NSTT Pro - Top 20 & Best Set</title>
+    <title>NSTT Pro - Closet & Rankings</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>NSTT - CÔNG CỤ PHỐI ĐỒ PRO</h1>
-            <p>Dữ liệu chuẩn Nikki Info • 2 Cột Rankings • Tên Tiếng Việt</p>
+            <h1>NSTT - BỘ LỌC PHỐI ĐỒ PRO</h1>
+            <p>Dữ liệu chuẩn Nikki Info • Tên Tiếng Việt • Giao diện Ô vuông</p>
         </header>
 
         <section class="calc-section">
-            <div class="arena-picker">
+            <div class="input-group">
                 <select id="arena-select" onchange="applyArenaWeights()">
                     <option value="">-- Chọn Chủ Đề Khu Thi Đấu --</option>
                     <option value="tiecvenbien">Tiệc Ven Biển</option>
@@ -35,10 +35,7 @@
                     <option value="kythao">Đẹp Tuyệt Trần</option>
                     <option value="phale">Đẹp Thanh Tú</option>
                 </select>
-            </div>
-
-            <div class="tag-filter">
-                <label>Tag yêu cầu: <select id="tag-select"><option value="">-- Không Tag --</option></select></label>
+                <select id="tag-select"><option value="">-- Không Tag --</option></select>
             </div>
 
             <div class="weights-grid">
@@ -53,14 +50,12 @@
                 <label>Thương: <input type="number" id="w-cute" value="0" step="0.1"></label>
                 <label>Thành: <input type="number" id="w-mature" value="0" step="0.1"></label>
             </div>
-            <button class="btn-calc" onclick="calculateEverything()">PHÂN TÍCH ĐỒ</button>
+            <button class="btn-main" onclick="calculateEverything()">PHÂN TÍCH BỘ ĐỒ</button>
         </section>
 
         <div id="result-container" style="display:none;">
-            <div class="result-header">
-                <h2>BỘ ĐỒ MẠNH NHẤT: <span id="total-score-val">0</span></h2>
-            </div>
-            <ul id="best-set-list" class="res-list"></ul>
+            <h2 class="section-title">BỘ ĐỒ MẠNH NHẤT: <span id="total-score-val">0</span></h2>
+            <ul id="best-set-list" class="best-set-grid"></ul>
             
             <h2 class="section-title">TOP 20 RANKINGS</h2>
             <div id="advanced-guide"></div>
@@ -68,7 +63,7 @@
 
         <section class="inventory-section">
             <div class="inventory-header">
-                <h2>KHO ĐỒ CỦA TÔI</h2>
+                <h2>TỦ ĐỒ CỦA TÔI</h2>
                 <button class="btn-save" onclick="saveInventory()">LƯU TỦ ĐỒ</button>
             </div>
             <div id="category-tabs" class="tabs-container"></div>
