@@ -3,51 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NSTT - Arena VIP Tool</title>
+    <title>NSTT Pro - Top 20 & Best Set</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body id="main-body">
     <div class="container">
         <header>
-            <h1>NSTT - Phối Đồ & Tính Sao</h1>
-            <p>Hệ thống tính điểm thông minh dựa trên Rank và Độ Hiếm</p>
+            <h1>NSTT - Công Cụ Phối Đồ Chuyên Nghiệp</h1>
+            <p>So sánh đồ cá nhân & Bảng xếp hạng toàn Server</p>
         </header>
 
         <section class="inventory-section">
             <h2>1. Kho Đồ Cá Nhân</h2>
             <div id="category-tabs" class="tabs-container"></div>
-            <div id="item-lists" class="items-grid">
-                <p style="text-align:center; padding:20px;">Đang triệu hồi dữ liệu...</p>
-            </div>
+            <div id="item-lists" class="items-grid"></div>
             <button class="btn-save" onclick="saveInventory()">LƯU KHO ĐỒ</button>
         </section>
 
         <section class="calc-section">
-            <h2>2. Khu Thi Đấu (17 Chủ Đề)</h2>
+            <h2>2. Tùy Chỉnh Chỉ Số</h2>
             <div class="arena-picker">
                 <select id="arena-select" onchange="applyArenaWeights()">
                     <option value="">-- Chọn Chủ Đề Khu Thi Đấu --</option>
-                    <optgroup label="Đơn Giản / Năng Động">
-                        <option value="tiecvenbien">Tiệc Ven Biển</option>
-                        <option value="vanphong">Ngôi Sao Văn Phòng</option>
-                        <option value="noel">Noel Đoàn Viên</option>
-                        <option value="vandung">Vận Động</option>
-                        <option value="xuan">Chuyến Du Xuân</option>
-                        <option value="he">Chuyện Ngày Hè</option>
-                        <option value="thethao">Liên Hoan Mùa Hè</option>
-                        <option value="thamtu">Sherlock Holmes</option>
-                        <option value="rock">Phòng Hòa Nhạc</option>
-                        <option value="thanhxuan">Thành Thiếu Nữ</option>
-                    </optgroup>
-                    <optgroup label="Hoa Lệ / Thanh Lịch">
-                        <option value="tiectra">Giao Thời</option>
-                        <option value="datiec">Nữ Vương</option>
-                        <option value="nuvuong">Ngọn Lửa Ngày Đông</option>
-                        <option value="ngoisao">Vũ Hội Cung Đình</option>
-                        <option value="tuyet">Công Viên Cổ Tích</option>
-                        <option value="kythao">Đẹp Tuyệt Trần</option>
-                        <option value="phale">Đẹp Thanh Tú</option>
-                    </optgroup>
+                    <option value="tiecvenbien">Tiệc Ven Biển</option>
+                    <option value="vanphong">Ngôi Sao Văn Phòng</option>
+                    <option value="noel">Noel Đoàn Viên</option>
+                    <option value="vandung">Vận Động</option>
+                    <option value="xuan">Chuyến Du Xuân</option>
+                    <option value="he">Chuyện Ngày Hè</option>
+                    <option value="thethao">Liên Hoan Mùa Hè</option>
+                    <option value="thamtu">Sherlock Holmes</option>
+                    <option value="rock">Phòng Hòa Nhạc</option>
+                    <option value="thanhxuan">Thành Thiếu Nữ</option>
+                    <option value="tiectra">Giao Thời</option>
+                    <option value="datiec">Nữ Vương</option>
+                    <option value="nuvuong">Ngọn Lửa Ngày Đông</option>
+                    <option value="ngoisao">Vũ Hội Cung Đình</option>
+                    <option value="tuyet">Công Viên Cổ Tích</option>
+                    <option value="kythao">Đẹp Tuyệt Trần</option>
+                    <option value="phale">Đẹp Thanh Tú</option>
                 </select>
             </div>
 
@@ -56,25 +50,42 @@
             </div>
 
             <div class="weights-grid">
-                <label>Đơn giản: <input type="number" id="w-simple" value="0" step="0.1"></label>
-                <label>Hoa lệ: <input type="number" id="w-gorgeous" value="0" step="0.1"></label>
-                <hr><label>Trong sáng: <input type="number" id="w-pure" value="0" step="0.1"></label>
-                <label>Gợi cảm: <input type="number" id="w-sexy" value="0" step="0.1"></label>
-                <hr><label>Thanh lịch: <input type="number" id="w-elegance" value="0" step="0.1"></label>
-                <label>Năng động: <input type="number" id="w-lively" value="0" step="0.1"></label>
-                <hr><label>Giữ ấm: <input type="number" id="w-warm" value="0" step="0.1"></label>
-                <label>Mát mẻ: <input type="number" id="w-cool" value="0" step="0.1"></label>
-                <hr><label>Dễ thương: <input type="number" id="w-cute" value="0" step="0.1"></label>
-                <label>Trưởng thành: <input type="number" id="w-mature" value="0" step="0.1"></label>
+                <label>Đơn giản: <input type="number" id="w-simple" value="0.1" step="0.1"></label>
+                <label>Hoa lệ: <input type="number" id="w-gorgeous" value="0.1" step="0.1"></label>
+                <hr>
+                <label>Trong sáng: <input type="number" id="w-pure" value="0.1" step="0.1"></label>
+                <label>Gợi cảm: <input type="number" id="w-sexy" value="0.1" step="0.1"></label>
+                <hr>
+                <label>Thanh lịch: <input type="number" id="w-elegance" value="0.1" step="0.1"></label>
+                <label>Năng động: <input type="number" id="w-lively" value="0.1" step="0.1"></label>
+                <hr>
+                <label>Giữ ấm: <input type="number" id="w-warm" value="0.1" step="0.1"></label>
+                <label>Mát mẻ: <input type="number" id="w-cool" value="0.1" step="0.1"></label>
+                <hr>
+                <label>Dễ thương: <input type="number" id="w-cute" value="0.1" step="0.1"></label>
+                <label>Trưởng thành: <input type="number" id="w-mature" value="0.1" step="0.1"></label>
             </div>
 
-            <button class="btn-calc" onclick="suggestBestOutfit()">TÌM ĐỒ VIP NHẤT</button>
-            
-            <div id="result-box" class="result-container" style="display:none;">
-                <div class="total-score-header"><h3>Tổng điểm dự kiến: <span id="total-score-val">0</span></h3></div>
-                <ul id="suggestion-list"></ul>
-            </div>
+            <button class="btn-calc" onclick="calculateEverything()">PHÂN TÍCH ĐỒ</button>
         </section>
+
+        <div id="result-container" style="display:none;">
+            <section class="best-set-section">
+                <div class="header-box pink">
+                    <h2>BỘ ĐỒ MẠNH NHẤT BẠN CÓ</h2>
+                    <p>Tổng điểm dự kiến: <span id="total-score-val">0</span></p>
+                </div>
+                <ul id="best-set-list" class="res-list"></ul>
+            </section>
+
+            <section class="top-ranking-section">
+                <div class="header-box blue">
+                    <h2>TOP 20 TOÀN GAME (ADVANCED)</h2>
+                    <p>Những món mạnh nhất hiện nay</p>
+                </div>
+                <div id="advanced-guide"></div>
+            </section>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
