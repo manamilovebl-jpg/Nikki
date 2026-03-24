@@ -1,7 +1,7 @@
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvuIgcVvxltqjqcALb8tpaG-pmhY7VmV9G7AB0STX4964cPnLbG9Vfirr5N2fVoEEAkjCepvqxFtvg/pub?output=csv';
 let clothingData = [], userInventory = [];
 
-// BẢNG ĐIỂM CHI TIẾT
+// --- HỆ SỐ ĐIỂM CHUẨN (NIKKI INFO) ---
 const baseTable = { 'sss+': 6660, 'sss': 6000, 'sss-': 5520, 'ss+': 5280, 'ss': 4800, 'ss-': 4416, 's++': 4080, 's+': 3760, 's': 3600, 's-': 3360, 'a+': 2640, 'a': 2400, 'a-': 2200, 'b+': 1980, 'b': 1800, 'b-': 1660, 'c+': 1320, 'c': 1200, 'c-': 1104 };
 const typeMods = { 'dress': 1, 'top': 0.5, 'bottom': 0.5, 'hair': 0.25, 'shoes': 0.25, 'coat': 0.25, 'makeup': 0.25, 'accessory': 0.1 };
 const rarityMods = { 6: 1.25, 5: 1, 4: 0.8, 3: 0.6, 2: 0.45, 1: 0.3 };
@@ -27,58 +27,78 @@ const arenaData = {
     "phale": { gorgeous: 1.33, elegance: 1.33, cute: 1.33, pure: 1, cool: 0.67 }
 };
 
+// --- KHỞI TẠO VÀ LOAD DỮ LIỆU ---
 async function init() {
     try {
         const res = await fetch(SHEET_URL);
-        const csv = await res.text();
-        const rows = csv.split(/\r?\n/).slice(1);
+        const data = await res.text();
+        const rows = data.split(/\r?\n/).slice(1);
         userInventory = JSON.parse(localStorage.getItem('inventory')) || [];
         
         clothingData = rows.map(row => {
+            if (!row.trim()) return null;
             const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
             if (c.length < 28) return null;
-            if (c[3]?.trim().toUpperCase() === 'TRUE' && !userInventory.includes(c[0].trim())) userInventory.push(c[0].trim());
+
+            const id = c[0].trim();
+            if (c[3]?.trim().toUpperCase() === 'TRUE' && !userInventory.includes(id)) {
+                userInventory.push(id);
+            }
+
             return {
-                id: c[0].trim(),
-                image: c[1].trim(), 
-                name: c[27]?.trim().replace(/"/g,"") || c[2].trim().replace(/"/g,""), // Ưu tiên Cột AB
-                type: c[4].trim().toLowerCase(), // Ví dụ: hair, dress, phụ kiện-tai...
+                id,
+                image: c[1].trim(),
+                name: c[27]?.trim().replace(/"/g,"") || c[2]?.trim().replace(/"/g,""),
+                type: c[4].trim().toLowerCase(),
                 star: c[5].trim(),
                 quality: c[19]?.trim() || 'đồ thông thường',
-                tags: [c[16]?.trim(), c[17]?.trim()].filter(t => t),
+                tags: [c[16]?.trim(), c[17]?.trim()].filter(t => t && t !== ""),
                 stats: { gorgeous: c[6], simple: c[7], elegance: c[8], lively: c[9], mature: c[10], cute: c[11], sexy: c[12], pure: c[13], warm: c[14], cool: c[15] }
             };
         }).filter(i => i);
         renderUI();
-    } catch (e) { console.error("Lỗi:", e); }
+    } catch (e) { console.error("Lỗi khởi tạo:", e); }
 }
 
+// --- LOGIC TÍNH TOÁN PRO ---
 function calculateEverything() {
     const aid = document.getElementById('arena-select').value;
     const stag = document.getElementById('tag-select').value;
     const ARENA_SCALE = 1.315; 
-    const w = { gorgeous: parseFloat(document.getElementById('w-gorgeous').value), simple: parseFloat(document.getElementById('w-simple').value), pure: parseFloat(document.getElementById('w-pure').value), sexy: parseFloat(document.getElementById('w-sexy').value), elegance: parseFloat(document.getElementById('w-elegance').value), lively: parseFloat(document.getElementById('w-lively').value), warm: parseFloat(document.getElementById('w-warm').value), cool: parseFloat(document.getElementById('w-cool').value), cute: parseFloat(document.getElementById('w-cute').value), mature: parseFloat(document.getElementById('w-mature').value) };
+    
+    const w = {
+        gorgeous: parseFloat(document.getElementById('w-gorgeous').value) || 0,
+        simple: parseFloat(document.getElementById('w-simple').value) || 0,
+        pure: parseFloat(document.getElementById('w-pure').value) || 0,
+        sexy: parseFloat(document.getElementById('w-sexy').value) || 0,
+        elegance: parseFloat(document.getElementById('w-elegance').value) || 0,
+        lively: parseFloat(document.getElementById('w-lively').value) || 0,
+        warm: parseFloat(document.getElementById('w-warm').value) || 0,
+        cool: parseFloat(document.getElementById('w-cool').value) || 0,
+        cute: parseFloat(document.getElementById('w-cute').value) || 0,
+        mature: parseFloat(document.getElementById('w-mature').value) || 0
+    };
 
     const types = [...new Set(clothingData.map(i => i.type))];
     let scoredByType = {};
 
-    // TÍNH ĐIỂM CHO TẤT CẢ
+    // 1. Tính điểm từng món
     types.forEach(type => {
         scoredByType[type] = clothingData.filter(i => i.type === type).map(item => {
             let s = 0;
             // Xác định Mod theo nhóm chính
-            let groupMod = typeMods['accessory'];
-            if (type === 'dress') groupMod = typeMods['dress'];
-            else if (type === 'top' || type === 'bottom') groupMod = typeMods['top'];
-            else if (['hair', 'shoes', 'coat', 'makeup'].includes(type)) groupMod = typeMods[type];
+            let gMod = typeMods['accessory'];
+            if (type === 'dress') gMod = typeMods['dress'];
+            else if (type === 'top' || type === 'bottom') gMod = typeMods['top'];
+            else if (['hair', 'shoes', 'coat', 'makeup'].includes(type)) gMod = typeMods[type];
 
             for (let k in w) {
                 if (w[k] > 0) {
-                    const rank = item.stats[k] ? item.stats[k].toLowerCase().trim() : '';
+                    const rank = item.stats[k]?.toLowerCase().trim();
                     const base = baseTable[rank] || 0;
                     const rMod = rarityMods[item.star] || 1;
                     const qMod = qualityMods[item.quality.toLowerCase()] || 1;
-                    s += (base * groupMod * rMod * qMod) * w[k];
+                    s += (base * gMod * rMod * qMod) * w[k];
                 }
             }
             s *= ARENA_SCALE;
@@ -87,7 +107,7 @@ function calculateEverything() {
         }).sort((a,b) => b.finalScore - a.finalScore);
     });
 
-    // LOGIC CHỌN BỘ MẠNH NHẤT
+    // 2. Chọn Best Owned (Bộ Đồ Mạnh Nhất Bạn Có)
     const getBestOwned = (t) => scoredByType[t]?.find(i => userInventory.includes(i.id));
     let bestSet = [], totalScore = 0;
 
@@ -95,51 +115,47 @@ function calculateEverything() {
     const sDress = bDress ? bDress.finalScore : 0;
     const sTB = (bTop ? bTop.finalScore : 0) + (bBottom ? bBottom.finalScore : 0);
 
-    // So sánh Đầm vs Áo+Quần
+    // So sánh Đầm vs Áo + Quần
     if (sDress >= sTB && bDress) { bestSet.push(bDress); totalScore += sDress; }
     else { 
         if (bTop) { bestSet.push(bTop); totalScore += bTop.finalScore; } 
         if (bBottom) { bestSet.push(bBottom); totalScore += bBottom.finalScore; } 
     }
 
-    // Lấy các món khác (Tóc, Giày, và TẤT CẢ các loại Phụ kiện lẻ)
+    // Lấy tất cả các loại phụ kiện lẻ và món khác
     types.filter(t => !['dress', 'top', 'bottom'].includes(t)).forEach(type => {
         const item = getBestOwned(type);
         if (item) { bestSet.push(item); totalScore += item.finalScore; }
     });
 
-    // HIỂN THỊ BEST SET
+    // 3. Hiển thị Kết Quả
     document.getElementById('total-score-val').innerText = totalScore.toLocaleString();
     document.getElementById('best-set-list').innerHTML = bestSet.map(i => `
         <li>
-            <img src="${i.image}" class="item-thumb"> 
-            <div class="best-item-info">
-                <b>${i.type.toUpperCase()}</b><br>${i.name} 
-                <span class="score-tag">[${i.finalScore.toLocaleString()}]</span>
+            <img src="${i.image}" class="img-square">
+            <div class="guide-info">
+                <small>${i.type.toUpperCase()}</small><br>
+                <span class="item-name">${i.name}</span><br>
+                <b class="score-tag">${i.finalScore.toLocaleString()}</b>
             </div>
         </li>`).join('');
 
-    // HIỂN THỊ TOP 20 RANKINGS (2 CỘT)
     let guideHtml = "";
-    types.forEach(type => {
+    types.sort().forEach(type => {
         const top20 = scoredByType[type].slice(0, 20);
         guideHtml += `
             <div class="guide-cat">
-                <div class="guide-title" onclick="this.nextElementSibling.classList.toggle('active')">
-                    ${type.toUpperCase()} <span>▼</span>
-                </div>
+                <div class="guide-title" onclick="this.nextElementSibling.classList.toggle('active')">${type.toUpperCase()} <span>▼</span></div>
                 <ul class="guide-list active">
                     ${top20.map((i, idx) => `
                         <li class="${userInventory.includes(i.id) ? 'is-owned' : 'not-owned'}">
-                            <span style="font-size:0.7rem; color:#666;">#${idx+1}</span>
-                            <img src="${i.image}" class="guide-img">
+                            <img src="${i.image}" class="img-square">
                             <div class="guide-info">
-                                <span class="guide-name">${i.name}</span>
-                                <small>★${i.star} ${userInventory.includes(i.id) ? '✅' : ''}</small>
+                                <span class="item-name">#${idx+1} ${i.name}</span>
+                                <small>★${i.star} ${userInventory.includes(i.id) ? '✅' : ''}</small><br>
+                                <b class="score-tag">${i.finalScore.toLocaleString()}</b>
                             </div>
-                            <span class="score-tag">${i.finalScore.toLocaleString()}</span>
-                        </li>
-                    `).join('')}
+                        </li>`).join('')}
                 </ul>
             </div>`;
     });
@@ -147,7 +163,7 @@ function calculateEverything() {
     document.getElementById('result-container').style.display = 'block';
 }
 
-// CÁC HÀM BỔ TRỢ UI (Giữ nguyên)
+// --- CÁC HÀM UI ---
 function renderUI() {
     const cats = [...new Set(clothingData.map(i => i.type))].sort();
     document.getElementById('category-tabs').innerHTML = cats.map(cat => `<button class="tab-btn" onclick="showCat('${cat}')">${cat.toUpperCase()}</button>`).join('');
@@ -159,14 +175,17 @@ function showCat(type) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === type.toLowerCase()));
     const items = clothingData.filter(i => i.type === type);
     document.getElementById('item-lists').innerHTML = items.map(i => `
-        <label class="item-checkbox">
-            <input type="checkbox" value="${i.id}" ${userInventory.includes(i.id)?'checked':''} onchange="toggleItem('${i.id}', this.checked)">
-            <img src="${i.image}" class="item-thumb"> 
-            <span>${i.name}</span>
+        <label class="item-checkbox ${userInventory.includes(i.id)?'is-checked':''}">
+            <input type="checkbox" value="${i.id}" ${userInventory.includes(i.id)?'checked':''} onchange="toggleItem('${i.id}', this.checked, this)">
+            <img src="${i.image}" class="img-square">
+            <span class="item-name">${i.name}</span>
         </label>`).join('');
 }
-function toggleItem(id, own) { if(own) { if(!userInventory.includes(id)) userInventory.push(id); } else { userInventory = userInventory.filter(i => i !== id); } }
-function saveInventory() { localStorage.setItem('inventory', JSON.stringify(userInventory)); alert("Đã lưu tủ đồ thành công!"); }
+function toggleItem(id, own, el) { 
+    if(own) { if(!userInventory.includes(id)) userInventory.push(id); el.parentElement.classList.add('is-checked'); } 
+    else { userInventory = userInventory.filter(i => i !== id); el.parentElement.classList.remove('is-checked'); } 
+}
+function saveInventory() { localStorage.setItem('inventory', JSON.stringify(userInventory)); alert("Đã lưu!"); }
 function applyArenaWeights() {
     const aid = document.getElementById('arena-select').value;
     const attrs = ['simple','gorgeous','pure','sexy','elegance','lively','warm','cool','cute','mature'];
