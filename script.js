@@ -1,26 +1,20 @@
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvuIgcVvxltqjqcALb8tpaG-pmhY7VmV9G7AB0STX4964cPnLbG9Vfirr5N2fVoEEAkjCepvqxFtvg/pub?output=csv';
 let clothingData = [], userInventory = [];
 
-// BẢNG ĐIỂM GỐC THEO RANK (Dựa trên tab Thông Tin)
-const rankBase = {
-    'sss': 600, // Dự phòng SSS
-    'ss': 490,
-    's': 400,
-    'a': 320,
-    'b': 240,
-    'c': 160
+// 1. Bảng điểm Base trung bình từ tab Thông Tin
+const rankBase = { 'sss': 600, 'ss': 490, 's': 400, 'a': 320, 'b': 240, 'c': 160 };
+
+// 2. Hệ số nhân theo vị trí đồ
+const typeMultipliers = {
+    'dress': 10, 'top': 5, 'bottom': 5, 'hair': 2.5, 'shoes': 2.5, 'coat': 2.5, 'makeup': 2.5, 'accessory': 1
 };
 
-// HỆ SỐ NHÂN THEO VỊ TRÍ (Multiplier)
-const typeMultipliers = {
-    'dress': 10,
-    'top': 5,
-    'bottom': 5,
-    'hair': 2.5,
-    'shoes': 2.5,
-    'coat': 2.5,
-    'makeup': 2.5,
-    'accessory': 1 // Tất cả các loại phụ kiện khác
+// 3. Hệ số ẩn dựa trên Cột T (Phẩm chất đồ)
+const qualityMultipliers = {
+    'đồ cực phẩm (top)': 1.25,
+    'đồ cao cấp': 1.1,
+    'đồ thông thường': 1,
+    'top': 1.25 // Dự phòng trường hợp chỉ ghi "Top"
 };
 
 const arenaData = {
@@ -43,30 +37,25 @@ const arenaData = {
     "phale": { gorgeous: 1.33, elegance: 1.33, cute: 1.33, pure: 1.0, cool: 1.0 }
 };
 
-// HÀM TÍNH ĐIỂM CHUẨN THEO BẢNG TÍNH CỦA BẠN
-function calculateNikkiScore(rank, type, star) {
+function calculateNikkiScore(rank, type, star, quality) {
     if (!rank) return 0;
     const r = rank.trim().toLowerCase();
     const t = type.trim().toLowerCase();
+    const q = quality ? quality.trim().toLowerCase() : 'đồ thông thường';
     
-    // 1. Lấy điểm Base trung bình từ Rank
     let base = rankBase[r] || 0;
+    let multiplier = typeMultipliers[t] || 1;
+    let qualityMod = qualityMultipliers[q] || 1;
     
-    // 2. Lấy hệ số Multiplier theo vị trí
-    let multiplier = typeMultipliers[t] || 1; // Mặc định là Accessory (x1)
-    
-    // 3. Thưởng thêm theo số Sao (Dựa trên logic game: đồ nhiều sao base cao hơn)
     const starBonus = (parseInt(star) || 0) * 5; 
 
-    // 4. Công thức: (Base + Star) * Multiplier
-    let finalBase = (base + starBonus) * multiplier;
+    // CÔNG THỨC: (Base + StarBonus) * Vị trí * Hệ số ẩn Cột T
+    let finalScore = (base + starBonus) * multiplier * qualityMod;
 
-    // 5. Penalty cho Accessory (60% Penalty = x0.4 điểm)
-    if (multiplier === 1) {
-        finalBase *= 0.4;
-    }
+    // Penalty cho Accessory
+    if (multiplier === 1) finalScore *= 0.4;
 
-    return finalBase;
+    return finalScore;
 }
 
 async function init() {
@@ -78,16 +67,17 @@ async function init() {
 
         clothingData = rows.map(row => {
             const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            if (c.length < 15) return null;
+            if (c.length < 20) return null; // Đảm bảo đọc đến được cột T
             
             const id = c[0]?.trim();
             const type = c[4]?.trim().toLowerCase();
             const star = c[5]?.trim();
-            
+            const quality = c[19]?.trim(); // CỘT T (Index 19)
+
             if (c[3]?.trim().toUpperCase() === 'TRUE') userInventory.push(id);
 
             return {
-                id, image: c[1]?.trim(), name: c[2]?.trim().replace(/"/g, ""), type, star,
+                id, image: c[1]?.trim(), name: c[2]?.trim().replace(/"/g, ""), type, star, quality,
                 tags: [c[16]?.trim(), c[17]?.trim()].filter(t => t),
                 stats: {
                     gorgeous: c[6], simple: c[7], elegance: c[8], lively: c[9], mature: c[10], 
@@ -97,29 +87,6 @@ async function init() {
         }).filter(i => i);
         renderUI();
     } catch (e) { console.error(e); }
-}
-
-function renderUI() {
-    const cats = [...new Set(clothingData.map(i => i.type))];
-    document.getElementById('category-tabs').innerHTML = cats.map(cat => 
-        `<button class="tab-btn" onclick="showCat('${cat}')">${cat.toUpperCase()}</button>`
-    ).join('');
-    const allTags = [...new Set(clothingData.flatMap(i => i.tags))].sort();
-    document.getElementById('tag-select').innerHTML = '<option value="">-- Không Tag --</option>' + 
-        allTags.map(t => `<option value="${t}">${t}</option>`).join('');
-    showCat(cats[0]);
-}
-
-function showCat(type) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === type.toLowerCase()));
-    const items = clothingData.filter(i => i.type === type);
-    document.getElementById('item-lists').innerHTML = items.map(i => `
-        <label class="item-checkbox">
-            <span class="item-star-tag">★${i.star}</span>
-            <input type="checkbox" value="${i.id}" ${userInventory.includes(i.id)?'checked':''} onchange="toggleItem('${i.id}', this.checked)">
-            <img src="${i.image}" class="item-thumb" onerror="this.src='https://via.placeholder.com/45'">
-            <div class="item-info"><b>${i.name}</b><br><small>${i.id}</small></div>
-        </label>`).join('');
 }
 
 function calculateEverything() {
@@ -144,10 +111,10 @@ function calculateEverything() {
         let scoredItems = clothingData.filter(i => i.type === type).map(item => {
             let s = 0;
             for (let k in w) {
-                const baseValue = calculateNikkiScore(item.stats[k], type, item.star);
+                const baseValue = calculateNikkiScore(item.stats[k], type, item.star, item.quality);
                 s += baseValue * w[k];
             }
-            if (stag && item.tags.includes(stag)) s *= 2;
+            if (stag && item.tags.includes(stag)) s *= 2.5; // Tăng hệ số Tag lên 2.5 cho sát thực tế
             return { ...item, finalScore: Math.round(s) };
         }).sort((a,b) => b.finalScore - a.finalScore);
 
@@ -178,6 +145,25 @@ function calculateEverything() {
     document.getElementById('result-container').style.display = 'block';
 }
 
+// Các hàm phụ trợ giữ nguyên
+function renderUI() {
+    const cats = [...new Set(clothingData.map(i => i.type))];
+    document.getElementById('category-tabs').innerHTML = cats.map(cat => `<button class="tab-btn" onclick="showCat('${cat}')">${cat.toUpperCase()}</button>`).join('');
+    const allTags = [...new Set(clothingData.flatMap(i => i.tags))].sort();
+    document.getElementById('tag-select').innerHTML = '<option value="">-- Không Tag --</option>' + allTags.map(t => `<option value="${t}">${t}</option>`).join('');
+    showCat(cats[0]);
+}
+function showCat(type) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === type.toLowerCase()));
+    const items = clothingData.filter(i => i.type === type);
+    document.getElementById('item-lists').innerHTML = items.map(i => `
+        <label class="item-checkbox">
+            <span class="item-star-tag">★${i.star}</span>
+            <input type="checkbox" value="${i.id}" ${userInventory.includes(i.id)?'checked':''} onchange="toggleItem('${i.id}', this.checked)">
+            <img src="${i.image}" class="item-thumb" onerror="this.src='https://via.placeholder.com/45'">
+            <div class="item-info"><b>${i.name}</b><br><small>${i.id}</small></div>
+        </label>`).join('');
+}
 function toggleItem(id, own) { if(own) { if(!userInventory.includes(id)) userInventory.push(id); } else userInventory = userInventory.filter(i => i!==id); }
 function saveInventory() { localStorage.setItem('inventory', JSON.stringify(userInventory)); alert("Đã lưu kho đồ!"); }
 function applyArenaWeights() {
