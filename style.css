@@ -1,35 +1,21 @@
-:root { --pink: #ff4d6d; --blue: #00b4d8; --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; }
-body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
-.container { max-width: 950px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-
-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-.weights-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; background: #252525; padding: 15px; border-radius: 8px; margin: 15px 0; }
-.weights-grid label { font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
-.weights-grid input { width: 45px; background: #333; border: 1px solid #444; color: white; padding: 4px; border-radius: 4px; }
-
-/* Best Set List */
-.res-list { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 30px; }
-.res-list li { display: flex; align-items: center; gap: 12px; background: #2a2a2a; padding: 10px; border-radius: 8px; border-left: 4px solid var(--pink); }
-
-/* Top 20 - 2 Columns Grid */
-.guide-cat { margin-bottom: 15px; border: 1px solid #333; border-radius: 8px; overflow: hidden; }
-.guide-title { background: #333; padding: 12px; font-weight: bold; color: var(--blue); cursor: pointer; display: flex; justify-content: space-between; }
-.guide-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; background: #1a1a1a; list-style: none; margin: 0; }
-.guide-list li { display: flex; align-items: center; gap: 10px; background: #222; padding: 8px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #333; position: relative; }
-.guide-img { width: 45px; height: 45px; border-radius: 5px; object-fit: cover; }
-.guide-info { flex-grow: 1; overflow: hidden; }
-.guide-name { font-weight: bold; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
-.score-tag { color: #ffd700; font-weight: bold; font-size: 0.8rem; }
-
-.is-owned { border-left: 4px solid #4caf50 !important; }
-.not-owned { border-left: 4px solid #f44336 !important; opacity: 0.7; }
-
-/* Kho đồ */
-.items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; height: 400px; overflow-y: auto; background: #151515; padding: 15px; border-radius: 8px; }
-.item-checkbox { display: flex; align-items: center; gap: 10px; background: #252525; padding: 8px; border-radius: 8px; border: 1px solid #333; cursor: pointer; }
-
-.btn-calc { background: var(--pink); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s; }
-.btn-calc:hover { background: #ff758f; }
-.tabs-container { margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
-.tab-btn { background: #333; color: #bbb; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-.tab-btn.active { background: var(--pink); color: white; }
+// Tìm đoạn tạo guideHtml trong hàm calculateEverything và thay bằng:
+guideHtml += `
+    <div class="guide-cat">
+        <div class="guide-title" onclick="this.nextElementSibling.classList.toggle('active')">
+            ${type.toUpperCase()} <span>▼</span>
+        </div>
+        <ul class="guide-list active">
+            ${top20.map((i, idx) => `
+                <li class="${userInventory.includes(i.id) ? 'is-owned' : 'not-owned'}">
+                    <img src="${i.image}" class="guide-img" onerror="this.src='https://via.placeholder.com/50'">
+                    <div class="guide-info">
+                        <span class="guide-name" title="${i.name}">${i.name}</span>
+                        <div class="guide-meta">
+                            <small style="color: #aaa;">★${i.star} ${userInventory.includes(i.id) ? '✅' : ''}</small>
+                            <span class="guide-score-val">${i.finalScore.toLocaleString()}</span>
+                        </div>
+                    </div>
+                </li>
+            `).join('')}
+        </ul>
+    </div>`;
