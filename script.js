@@ -1,7 +1,7 @@
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvuIgcVvxltqjqcALb8tpaG-pmhY7VmV9G7AB0STX4964cPnLbG9Vfirr5N2fVoEEAkjCepvqxFtvg/pub?output=csv';
 let clothingData = [], userInventory = [];
 
-// 1. BẢNG BASE SCORE (Theo ảnh 1)
+// 1. BẢNG BASE SCORE CHUẨN (Theo ảnh bạn gửi)
 const baseScoreTable = {
     'sss+': { dress: 6660, top: 3330, hair: 1665, accessory: 666 },
     'sss':  { dress: 6000, top: 3000, hair: 1500, accessory: 600 },
@@ -26,31 +26,31 @@ const baseScoreTable = {
 
 // 2. HỆ SỐ ĐỘ HIẾM & PHẨM CHẤT (Ẩn)
 const rarityMultipliers = { 6: 1.15, 5: 1, 4: 0.8, 3: 0.6, 2: 0.45, 1: 0.3 };
-const qualityMultipliers = { 'đồ cực phẩm (top)': 1.25, 'đồ cao cấp': 1.1, 'đồ thông thường': 1, 'top': 1.25 };
+const qualityMultipliers = { 'đồ cực phẩm (top)': 1.25, 'đồ cao cấp': 1.1, 'đồ thông thường': 1 };
 
-// 3. HỆ SỐ TRỌNG SỐ ẢI (Dựa chính xác trên ảnh 3)
+// 3. HỆ SỐ TRỌNG SỐ ẢI (Chuẩn ảnh 17 chủ đề)
 const arenaData = {
-    "kythao": { gorgeous: 1.33, simple: 0, pure: 1.33, sexy: 0, elegance: 1.33, lively: 0, warm: 0, cool: 0.67, cute: 0, mature: 1 }, // Đẹp tuyệt trần
-    "noel": { gorgeous: 0, simple: 1.33, pure: 1.33, sexy: 0, elegance: 0, lively: 0.67, warm: 1.33, cool: 0, cute: 0, mature: 1 }, // Noel đoàn viên
-    "phale": { gorgeous: 0, simple: 1.33, pure: 1.33, sexy: 0, elegance: 1.33, lively: 0, warm: 0, cool: 1, cute: 0, mature: 0.67 }, // Đẹp thanh tú
-    "tuyet": { gorgeous: 1.33, simple: 0, pure: 1, sexy: 0, elegance: 1.33, lively: 0, warm: 0, cool: 0.67, cute: 0, mature: 1.33 }, // Công viên cổ tích
-    "rock": { gorgeous: 1.33, simple: 0, pure: 0, sexy: 0, elegance: 1.33, lively: 0, warm: 0.67, cool: 0, cute: 0, mature: 1.33 }, // Phòng hòa nhạc (Sửa key 'TT' thành mature/cute tùy ải)
-    "thanhxuan": { gorgeous: 0, simple: 0.67, pure: 0, sexy: 0, elegance: 1.33, lively: 1.33, warm: 1, cool: 0, cute: 0, mature: 1.33 }, // Thành thiếu nữ
-    "tiecvenbien": { gorgeous: 0, simple: 0.67, pure: 0, sexy: 1.33, elegance: 0, lively: 0, warm: 1, cool: 0, cute: 1.33, mature: 1.33 }, // Tiệc ven biển
-    "tiectra": { gorgeous: 0, simple: 0.67, pure: 0, sexy: 0, elegance: 1.33, lively: 0, warm: 1.33, cool: 1, cute: 0, mature: 1.33 }, // Giao thời
-    "vanphong": { gorgeous: 0, simple: 1.33, pure: 1, sexy: 0, elegance: 1.33, lively: 0, warm: 0, cool: 0.67, cute: 1.33, mature: 0 }, // Ngôi sao văn phòng
-    "he": { gorgeous: 0, simple: 1.33, pure: 0, sexy: 0, elegance: 1, lively: 1.33, warm: 0, cool: 1.33, cute: 0, mature: 0.67 }, // Chuyện ngày hè
-    "xuan": { gorgeous: 0, simple: 1.33, pure: 0, sexy: 0, elegance: 1, lively: 1.33, warm: 0, cool: 0.67, cute: 0, mature: 1.33 }, // Chuyến du xuân
-    "vandung": { gorgeous: 0, simple: 1, gorgeous: 0, pure: 0, sexy: 1.33, elegance: 0, lively: 1.33, warm: 1.33, cool: 0, cute: 1.33, mature: 0.67 }, // Vận động
-    "thethao": { gorgeous: 0, simple: 1.33, pure: 0, sexy: 0, elegance: 1.33, lively: 0, warm: 0.67, cool: 1.33, cute: 0, mature: 1 }, // Liên hoan ngày hè
-    "datiec": { gorgeous: 1, simple: 0, pure: 0, sexy: 1.33, elegance: 0, lively: 1.33, warm: 0, cool: 0.67, cute: 1.33, mature: 0 }, // Nữ vương
-    "nuvuong": { gorgeous: 0.67, simple: 0, pure: 0, sexy: 1.33, elegance: 0, lively: 0, warm: 1.33, cool: 1.33, cute: 0, mature: 1 }, // Ngọn lửa ngày đông
-    "thamtu": { gorgeous: 0, simple: 1.33, pure: 0, sexy: 0, elegance: 0.67, lively: 1.33, warm: 1.33, cool: 1, cute: 0, mature: 1.33 }, // Sherlock Holmes
-    "ngoisao": { gorgeous: 1.33, simple: 0, pure: 0, sexy: 1.33, elegance: 0, lively: 1.33, warm: 0, cool: 0.67, cute: 1, mature: 0 } // Vũ hội cung đình
+    "kythao": { gorgeous: 1.33, simple: 0, pure: 1.33, sexy: 0, elegance: 1.33, lively: 0, warm: 0, cool: 0.67, cute: 0, mature: 1 },
+    "noel": { gorgeous: 0, simple: 1.33, pure: 1.33, sexy: 0, elegance: 0, lively: 0.67, warm: 1.33, cool: 0, cute: 0, mature: 1 },
+    "phale": { gorgeous: 0, simple: 1.33, pure: 1.33, sexy: 0, elegance: 1.33, lively: 0, warm: 0, cool: 1, cute: 1.33, mature: 0.67 },
+    "tuyet": { gorgeous: 1.33, simple: 0, pure: 1, sexy: 0, elegance: 1.33, lively: 0, warm: 0, cool: 0.67, cute: 1.33, mature: 0 },
+    "rock": { gorgeous: 1.33, simple: 0, pure: 0, sexy: 1, elegance: 1.33, lively: 0, warm: 0.67, cool: 0, cute: 0, mature: 1.33 },
+    "thanhxuan": { gorgeous: 0, simple: 0.67, pure: 1.33, sexy: 0, elegance: 1.33, lively: 1, warm: 0, cool: 0, cute: 0, mature: 1.33 },
+    "tiecvenbien": { gorgeous: 0, simple: 0.67, pure: 0, sexy: 1.33, elegance: 0, lively: 1, warm: 0, cool: 1.33, cute: 1.33, mature: 0 },
+    "tiectra": { gorgeous: 0.67, simple: 0, pure: 1.33, sexy: 0, elegance: 0, lively: 1.33, warm: 0, cool: 1, cute: 0, mature: 1.33 },
+    "vanphong": { gorgeous: 0, simple: 1.33, pure: 0, sexy: 1, elegance: 1.33, lively: 0, warm: 0, cool: 0.67, cute: 0, mature: 1.33 },
+    "he": { gorgeous: 1.33, simple: 0, pure: 1, sexy: 0, elegance: 1.33, lively: 0, warm: 0, cool: 1.33, cute: 0, mature: 0.67 },
+    "xuan": { gorgeous: 1.33, simple: 0, pure: 1, sexy: 0, elegance: 1.33, lively: 1.33, warm: 0, cool: 0.67, cute: 0, mature: 0 },
+    "vandung": { gorgeous: 0, simple: 1, pure: 0, sexy: 1.33, elegance: 0, lively: 1.33, warm: 1.33, cool: 0, cute: 0, mature: 0.67 },
+    "thethao": { gorgeous: 1.33, simple: 0, pure: 1.33, sexy: 0, elegance: 0, lively: 0.67, warm: 0, cool: 1.33, cute: 0, mature: 1 },
+    "datiec": { gorgeous: 1.33, simple: 0, pure: 0, sexy: 1.33, elegance: 1.33, lively: 0, warm: 0, cool: 0, cute: 0, mature: 1 },
+    "nuvuong": { gorgeous: 0.67, simple: 0, pure: 0, sexy: 1.33, elegance: 0, lively: 1.33, warm: 1.33, cool: 0, cute: 0, mature: 1 },
+    "thamtu": { gorgeous: 0, simple: 1.33, pure: 0.67, sexy: 1.33, elegance: 1.33, lively: 0, warm: 0, cool: 0, cute: 0, mature: 1.33 },
+    "ngoisao": { gorgeous: 1.33, simple: 0, pure: 0, sexy: 1.33, elegance: 0, lively: 1.33, warm: 0, cool: 0.67, cute: 1, mature: 0 }
 };
 
-// 4. HÀM TÍNH ĐIỂM CHI TIẾT
-function calculateFullScore(rank, type, stars, quality) {
+// 4. LOGIC TÍNH ĐIỂM TỪNG MÓN (Làm tròn từng bước)
+function getBaseItemScore(rank, type, star, quality) {
     if (!rank) return 0;
     const r = rank.toLowerCase().trim();
     const t = type.toLowerCase().trim();
@@ -61,15 +61,18 @@ function calculateFullScore(rank, type, stars, quality) {
     else if (t === 'top' || t === 'bottom') group = 'top';
     else if (['hair', 'shoes', 'coat'].includes(t)) group = 'hair';
 
+    // Lấy điểm bảng
     const base = baseScoreTable[r] ? (baseScoreTable[r][group] || baseScoreTable[r]['accessory']) : 0;
-    const rarityMod = rarityMultipliers[stars] || 1;
+    
+    // Nhân hệ số tim & phẩm chất
+    const rarityMod = rarityMultipliers[star] || 1;
     const qualityMod = qualityMultipliers[q] || 1;
 
     return base * rarityMod * qualityMod;
 }
 
-// 5. HÀM TÍNH PHẠT PHỤ KIỆN
-function getAccessoryPenalty(count) {
+// 5. PENALTY PHỤ KIỆN
+function getPenalty(count) {
     if (count <= 3) return 1;
     if (count <= 5) return 0.95;
     if (count <= 10) return 0.9;
@@ -77,35 +80,14 @@ function getAccessoryPenalty(count) {
     return 0.7;
 }
 
-// 6. KHỞI TẠO DỮ LIỆU
-async function init() {
-    try {
-        const response = await fetch(SHEET_URL);
-        const data = await response.text();
-        const rows = data.split('\n').slice(1);
-        userInventory = []; 
-        clothingData = rows.map(row => {
-            const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            if (c.length < 20) return null;
-            const id = c[0]?.trim();
-            const type = c[4]?.trim().toLowerCase();
-            const star = c[5]?.trim();
-            const quality = c[19]?.trim();
-            if (c[3]?.trim().toUpperCase() === 'TRUE') userInventory.push(id);
-            return {
-                id, image: c[1]?.trim(), name: c[2]?.trim().replace(/"/g, ""), type, star, quality,
-                tags: [c[16]?.trim(), c[17]?.trim()].filter(t => t),
-                stats: { gorgeous: c[6], simple: c[7], elegance: c[8], lively: c[9], mature: c[10], cute: c[11], sexy: c[12], pure: c[13], warm: c[14], cool: c[15] }
-            };
-        }).filter(i => i);
-        renderUI();
-    } catch (e) { console.error(e); }
-}
-
-// 7. TÍNH TOÁN TỔNG THỂ
+// 6. TÍNH TOÁN TỔNG THỂ
 function calculateEverything() {
     const aid = document.getElementById('arena-select').value;
-    const w = {
+    const stag = document.getElementById('tag-select').value;
+    const tagType = document.getElementById('tag-type')?.value || 'quan-trong'; // Thường, Quan trọng, Bắt buộc
+
+    // Lấy Weights (Hệ số ải)
+    const weights = {
         gorgeous: parseFloat(document.getElementById('w-gorgeous').value) || 0,
         simple: parseFloat(document.getElementById('w-simple').value) || 0,
         pure: parseFloat(document.getElementById('w-pure').value) || 0,
@@ -119,51 +101,76 @@ function calculateEverything() {
     };
 
     const types = [...new Set(clothingData.map(i => i.type))];
-    // Sắp xếp loại đồ: Accessory cuối cùng để tính penalty
+    // Accessory tính sau cùng để áp Penalty
     types.sort((a,b) => (a.includes('accessory') ? 1 : -1));
 
-    let totalScore = 0, bestHtml = "", guideHtml = "", accessoryCount = 0;
+    let totalScore = 0, bestHtml = "", guideHtml = "", accCount = 0;
 
     types.forEach(type => {
         let scoredItems = clothingData.filter(i => i.type === type).map(item => {
-            let s = 0;
-            const attrMap = ['gorgeous', 'simple', 'elegance', 'lively', 'mature', 'cute', 'sexy', 'pure', 'warm', 'cool'];
-            attrMap.forEach(attr => {
-                if (w[attr] > 0) {
-                    const rankValue = item.stats[attr];
-                    s += calculateFullScore(rankValue, type, item.star, item.quality) * w[attr];
+            let itemTotal = 0;
+            const attrs = Object.keys(weights);
+            
+            attrs.forEach(attr => {
+                if (weights[attr] > 0) {
+                    const rank = item.stats[attr];
+                    const base = getBaseItemScore(rank, type, item.star, item.quality);
+                    // NHÂN TRỌNG SỐ VÀ LÀM TRÒN TỪNG THUỘC TÍNH
+                    itemTotal += Math.floor(base * weights[attr]);
                 }
             });
-            // Giả định Tag mặc định x2.5 nếu có (Bạn có thể sửa hệ số này)
-            if (document.getElementById('tag-select').value && item.tags.includes(document.getElementById('tag-select').value)) s *= 2.5;
-            return { ...item, finalScore: Math.round(s) };
+
+            // NHÂN TAG ĐẶC BIỆT (Theo ảnh: Thường 1.2, Quan trọng 2, Bắt buộc 5)
+            if (stag && item.tags.includes(stag)) {
+                let tagMod = 1.2;
+                if (tagType === 'quan-trong') tagMod = 2;
+                if (tagType === 'bat-buoc') tagMod = 5;
+                itemTotal = Math.floor(itemTotal * tagMod);
+            }
+
+            return { ...item, finalScore: itemTotal };
         }).sort((a,b) => b.finalScore - a.finalScore);
 
         // Best Owned
-        const bestOwned = scoredItems.find(i => userInventory.includes(i.id));
-        if (bestOwned) {
-            let sFinal = bestOwned.finalScore;
+        const best = scoredItems.find(i => userInventory.includes(i.id));
+        if (best) {
+            let s = best.finalScore;
             if (type.includes('accessory')) {
-                accessoryCount++;
-                sFinal *= getAccessoryPenalty(accessoryCount);
+                accCount++;
+                s = Math.floor(s * getPenalty(accCount));
             }
-            totalScore += sFinal;
-            bestHtml += `<li><img src="${bestOwned.image}" class="item-thumb"><div><b>${type.toUpperCase()}:</b> ${bestOwned.name}<br><small>Điểm: ${Math.round(sFinal).toLocaleString()}</small></div></li>`;
+            totalScore += s;
+            bestHtml += `<li><img src="${best.image}" class="item-thumb"><div><b>${type.toUpperCase()}:</b> ${best.name}<br><small>Điểm: ${s.toLocaleString()}</small></div></li>`;
         }
 
-        // Top 20 Rankings
-        const top20 = scoredItems.slice(0, 20);
-        guideHtml += `<div class="guide-cat"><div class="guide-title" onclick="this.nextElementSibling.classList.toggle('active')">${type.toUpperCase()}</div>
-        <ul class="guide-list">${top20.map((i,idx) => `<li class="${userInventory.includes(i.id)?'is-owned':'not-owned'}">#${idx+1} ${i.name} ★${i.star} [${i.finalScore.toLocaleString()}]</li>`).join('')}</ul></div>`;
+        // Guide Top 20
+        guideHtml += `<div class="guide-cat"><div class="guide-title" onclick="this.nextElementSibling.classList.toggle('active')">${type.toUpperCase()} (Top 20)</div>
+        <ul class="guide-list">${scoredItems.slice(0,20).map((i,idx) => `<li class="${userInventory.includes(i.id)?'is-owned':'not-owned'}">#${idx+1} ${i.name} ★${i.star} [${i.finalScore.toLocaleString()}]</li>`).join('')}</ul></div>`;
     });
 
-    document.getElementById('total-score-val').innerText = Math.round(totalScore).toLocaleString();
+    document.getElementById('total-score-val').innerText = totalScore.toLocaleString();
     document.getElementById('best-set-list').innerHTML = bestHtml;
     document.getElementById('advanced-guide').innerHTML = guideHtml;
     document.getElementById('result-container').style.display = 'block';
 }
 
-// UI Helpers
+// Khởi tạo (Dán đè các hàm init, renderUI cũ của bạn xuống đây)
+async function init() {
+    const res = await fetch(SHEET_URL);
+    const data = await res.text();
+    const rows = data.split('\n').slice(1);
+    clothingData = rows.map(row => {
+        const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        if (c.length < 20) return null;
+        if (c[3]?.trim().toUpperCase() === 'TRUE') userInventory.push(c[0].trim());
+        return {
+            id: c[0].trim(), image: c[1].trim(), name: c[2].trim().replace(/"/g,""), type: c[4].trim().toLowerCase(), star: c[5].trim(), quality: c[19].trim(),
+            tags: [c[16]?.trim(), c[17]?.trim()].filter(t => t),
+            stats: { gorgeous: c[6], simple: c[7], elegance: c[8], lively: c[9], mature: c[10], cute: c[11], sexy: c[12], pure: c[13], warm: c[14], cool: c[15] }
+        };
+    }).filter(i => i);
+    renderUI();
+}
 function renderUI() {
     const cats = [...new Set(clothingData.map(i => i.type))];
     document.getElementById('category-tabs').innerHTML = cats.map(cat => `<button class="tab-btn" onclick="showCat('${cat}')">${cat.toUpperCase()}</button>`).join('');
@@ -172,11 +179,10 @@ function renderUI() {
     showCat(cats[0]);
 }
 function showCat(type) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === type.toLowerCase()));
     const items = clothingData.filter(i => i.type === type);
-    document.getElementById('item-lists').innerHTML = items.map(i => `<label class="item-checkbox"><span class="item-star-tag">★${i.star}</span><input type="checkbox" value="${i.id}" ${userInventory.includes(i.id)?'checked':''} onchange="toggleItem('${i.id}', this.checked)"><img src="${i.image}" class="item-thumb"><div><b>${i.name}</b><br><small>${i.id}</small></div></label>`).join('');
+    document.getElementById('item-lists').innerHTML = items.map(i => `<label class="item-checkbox"><input type="checkbox" value="${i.id}" ${userInventory.includes(i.id)?'checked':''} onchange="toggleItem('${i.id}', this.checked)"><img src="${i.image}" class="item-thumb"><div><b>${i.name}</b><br><small>★${i.star}</small></div></label>`).join('');
 }
-function toggleItem(id, own) { if(own) { if(!userInventory.includes(id)) userInventory.push(id); } else userInventory = userInventory.filter(i => i!==id); }
+function toggleItem(id, own) { if(own) userInventory.push(id); else userInventory = userInventory.filter(i => i!==id); }
 function saveInventory() { localStorage.setItem('inventory', JSON.stringify(userInventory)); alert("Đã lưu!"); }
 function applyArenaWeights() {
     const aid = document.getElementById('arena-select').value;
