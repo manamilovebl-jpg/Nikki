@@ -47,8 +47,7 @@ async function init() {
 
             // BỘ LỌC THÔNG MINH: Xóa hết chữ (H, D, S...) chỉ giữ lại số để lấy ảnh
             const cleanNumberID = rawID.replace(/\D/g, ""); 
-            const autoIconUrl = `https://raw.githubusercontent.com/lexi-the-pink/love-nikki-icons/master/images/${cleanNumberID}.png`;
-
+            const autoIconUrl = https://nikki.info/static/images/items/${cleanNumberID}.png;
             return {
                 id: rawID, // Vẫn hiện H1, H4... trên giao diện cho bạn dễ nhìn
                 image: autoIconUrl, // Dùng số để lấy ảnh icon thật
