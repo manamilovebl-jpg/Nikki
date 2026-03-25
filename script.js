@@ -40,19 +40,19 @@ async function init() {
             const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
             if (c.length < 28) return null;
 
-            const id = c[0].trim();
-            if (c[3]?.trim().toUpperCase() === 'TRUE' && !userInventory.includes(id)) {
-                userInventory.push(id);
+            const rawID = c[0].trim();
+            if (c[3]?.trim().toUpperCase() === 'TRUE' && !userInventory.includes(rawID)) {
+                userInventory.push(rawID);
             }
 
-            // TỰ ĐỘNG TẠO LINK ẢNH ICON THẬT DỰA TRÊN ID
-            // Kho ảnh này được lấy từ nguồn uy tín của cộng đồng Love Nikki
-            const autoImage = `https://raw.githubusercontent.com/lexi-the-pink/love-nikki-icons/master/images/${id}.png`;
+            // BỘ LỌC THÔNG MINH: Xóa hết chữ (H, D, S...) chỉ giữ lại số để lấy ảnh
+            const cleanNumberID = rawID.replace(/\D/g, ""); 
+            const autoIconUrl = `https://raw.githubusercontent.com/lexi-the-pink/love-nikki-icons/master/images/${cleanNumberID}.png`;
 
             return {
-                id,
-                image: autoImage, // Sử dụng link ảnh icon thật
-                name: c[27]?.trim().replace(/"/g,"") || c[2]?.trim().replace(/"/g,""), // Cột AB ưu tiên
+                id: rawID, // Vẫn hiện H1, H4... trên giao diện cho bạn dễ nhìn
+                image: autoIconUrl, // Dùng số để lấy ảnh icon thật
+                name: c[27]?.trim().replace(/"/g,"") || c[2]?.trim().replace(/"/g,""), // Cột AB
                 type: c[4].trim().toLowerCase(),
                 star: c[5].trim(),
                 quality: c[19]?.trim() || 'đồ thông thường',
@@ -64,7 +64,7 @@ async function init() {
     } catch (e) { console.error("Lỗi khởi tạo:", e); }
 }
 
-// --- LOGIC TÍNH TOÁN PRO (ĐẦM VS ÁO+QUẦN & PHỤ KIỆN LẺ) ---
+// --- LOGIC TÍNH TOÁN PRO ---
 function calculateEverything() {
     const aid = document.getElementById('arena-select').value;
     const stag = document.getElementById('tag-select').value;
@@ -86,7 +86,6 @@ function calculateEverything() {
     const types = [...new Set(clothingData.map(i => i.type))];
     let scoredByType = {};
 
-    // 1. Tính điểm từng món và phân loại
     types.forEach(type => {
         scoredByType[type] = clothingData.filter(i => i.type === type).map(item => {
             let s = 0;
@@ -110,7 +109,6 @@ function calculateEverything() {
         }).sort((a,b) => b.finalScore - a.finalScore);
     });
 
-    // 2. Logic chọn Bộ Đồ Mạnh Nhất
     const getBestOwned = (t) => scoredByType[t]?.find(i => userInventory.includes(i.id));
     let bestSet = [], totalScore = 0;
 
@@ -118,20 +116,17 @@ function calculateEverything() {
     const sDress = bDress ? bDress.finalScore : 0;
     const sTB = (bTop ? bTop.finalScore : 0) + (bBottom ? bBottom.finalScore : 0);
 
-    // Quyết định Đầm hay Áo+Quần
     if (sDress >= sTB && bDress) { bestSet.push(bDress); totalScore += sDress; }
     else { 
         if (bTop) { bestSet.push(bTop); totalScore += bTop.finalScore; } 
         if (bBottom) { bestSet.push(bBottom); totalScore += bBottom.finalScore; } 
     }
 
-    // Lấy TẤT CẢ các loại phụ kiện lẻ và các món khác
     types.filter(t => !['dress', 'top', 'bottom'].includes(t)).forEach(type => {
         const item = getBestOwned(type);
         if (item) { bestSet.push(item); totalScore += item.finalScore; }
     });
 
-    // 3. Hiển thị Best Set (Giao diện chuẩn Nikki Info)
     document.getElementById('total-score-val').innerText = totalScore.toLocaleString();
     document.getElementById('best-set-list').innerHTML = bestSet.map(i => `
         <li class="best-item-card">
@@ -143,7 +138,6 @@ function calculateEverything() {
             </div>
         </li>`).join('');
 
-    // 4. Hiển thị Rankings Top 20 (Giao diện 2 cột)
     let guideHtml = "";
     types.sort().forEach(type => {
         const top20 = scoredByType[type].slice(0, 20);
