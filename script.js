@@ -1,7 +1,7 @@
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvuIgcVvxltqjqcALb8tpaG-pmhY7VmV9G7AB0STX4964cPnLbG9Vfirr5N2fVoEEAkjCepvqxFtvg/pub?output=csv';
 let clothingData = [], userInventory = [];
 
-// HỆ SỐ CHUẨN NIKKI INFO
+// --- HỆ SỐ ĐIỂM CHUẨN (NIKKI INFO) ---
 const baseTable = { 'sss+': 6660, 'sss': 6000, 'sss-': 5520, 'ss+': 5280, 'ss': 4800, 'ss-': 4416, 's++': 4080, 's+': 3760, 's': 3600, 's-': 3360, 'a+': 2640, 'a': 2400, 'a-': 2200, 'b+': 1980, 'b': 1800, 'b-': 1660, 'c+': 1320, 'c': 1200, 'c-': 1104 };
 const typeMods = { 'dress': 1, 'top': 0.5, 'bottom': 0.5, 'hair': 0.25, 'shoes': 0.25, 'coat': 0.25, 'makeup': 0.25, 'accessory': 0.1 };
 const rarityMods = { 6: 1.25, 5: 1, 4: 0.8, 3: 0.6, 2: 0.45, 1: 0.3 };
@@ -27,6 +27,7 @@ const arenaData = {
     "phale": { gorgeous: 1.33, elegance: 1.33, cute: 1.33, pure: 1, cool: 0.67 }
 };
 
+// --- KHỞI TẠO VÀ LOAD DỮ LIỆU ---
 async function init() {
     try {
         const res = await fetch(SHEET_URL);
@@ -37,7 +38,7 @@ async function init() {
         clothingData = rows.map(row => {
             if (!row.trim()) return null;
             const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            if (c.length < 28) return null; // Đảm bảo đọc đến cột AB
+            if (c.length < 28) return null;
 
             const id = c[0].trim();
             if (c[3]?.trim().toUpperCase() === 'TRUE' && !userInventory.includes(id)) {
@@ -47,7 +48,7 @@ async function init() {
             return {
                 id,
                 image: c[1].trim(),
-                name: c[27]?.trim().replace(/"/g,"") || c[2]?.trim().replace(/"/g,""),
+                name: c[27]?.trim().replace(/"/g,"") || c[2]?.trim().replace(/"/g,""), // Cột AB ưu tiên
                 type: c[4].trim().toLowerCase(),
                 star: c[5].trim(),
                 quality: c[19]?.trim() || 'đồ thông thường',
@@ -59,6 +60,7 @@ async function init() {
     } catch (e) { console.error("Lỗi khởi tạo:", e); }
 }
 
+// --- LOGIC TÍNH TOÁN PRO (ĐẦM VS ÁO+QUẦN & PHỤ KIỆN LẺ) ---
 function calculateEverything() {
     const aid = document.getElementById('arena-select').value;
     const stag = document.getElementById('tag-select').value;
@@ -80,6 +82,7 @@ function calculateEverything() {
     const types = [...new Set(clothingData.map(i => i.type))];
     let scoredByType = {};
 
+    // 1. Tính điểm từng món và phân loại
     types.forEach(type => {
         scoredByType[type] = clothingData.filter(i => i.type === type).map(item => {
             let s = 0;
@@ -103,6 +106,7 @@ function calculateEverything() {
         }).sort((a,b) => b.finalScore - a.finalScore);
     });
 
+    // 2. Logic chọn Bộ Đồ Mạnh Nhất
     const getBestOwned = (t) => scoredByType[t]?.find(i => userInventory.includes(i.id));
     let bestSet = [], totalScore = 0;
 
@@ -110,28 +114,32 @@ function calculateEverything() {
     const sDress = bDress ? bDress.finalScore : 0;
     const sTB = (bTop ? bTop.finalScore : 0) + (bBottom ? bBottom.finalScore : 0);
 
+    // Quyết định Đầm hay Áo+Quần
     if (sDress >= sTB && bDress) { bestSet.push(bDress); totalScore += sDress; }
     else { 
         if (bTop) { bestSet.push(bTop); totalScore += bTop.finalScore; } 
         if (bBottom) { bestSet.push(bBottom); totalScore += bBottom.finalScore; } 
     }
 
+    // Lấy TẤT CẢ các loại phụ kiện lẻ và các món khác
     types.filter(t => !['dress', 'top', 'bottom'].includes(t)).forEach(type => {
         const item = getBestOwned(type);
         if (item) { bestSet.push(item); totalScore += item.finalScore; }
     });
 
+    // 3. Hiển thị Best Set (Giao diện chuẩn Nikki Info)
     document.getElementById('total-score-val').innerText = totalScore.toLocaleString();
     document.getElementById('best-set-list').innerHTML = bestSet.map(i => `
-        <li>
+        <li class="best-item-card">
             <img src="${i.image}" class="img-square">
-            <div class="guide-info">
-                <small>${i.type.toUpperCase()}</small><br>
-                <span class="item-name">${i.name}</span><br>
-                <b class="score-tag">${i.finalScore.toLocaleString()}</b>
+            <div class="item-card-content">
+                <div class="item-id-info">${i.type} no. ${i.id}</div>
+                <div class="item-name-text" style="color:var(--pink)">${i.name}</div>
+                <div class="score-tag">${i.finalScore.toLocaleString()}</div>
             </div>
         </li>`).join('');
 
+    // 4. Hiển thị Rankings Top 20 (Giao diện 2 cột)
     let guideHtml = "";
     types.sort().forEach(type => {
         const top20 = scoredByType[type].slice(0, 20);
@@ -142,10 +150,14 @@ function calculateEverything() {
                     ${top20.map((i, idx) => `
                         <li class="${userInventory.includes(i.id) ? 'is-owned' : 'not-owned'}">
                             <img src="${i.image}" class="img-square">
-                            <div class="guide-info">
-                                <span class="item-name">#${idx+1} ${i.name}</span>
-                                <small>★${i.star} ${userInventory.includes(i.id) ? '✅' : ''}</small><br>
-                                <b class="score-tag">${i.finalScore.toLocaleString()}</b>
+                            <div class="item-card-content">
+                                <div class="item-id-info">${i.type} no. ${i.id}</div>
+                                <div class="item-name-text">${i.name}</div>
+                                <div class="item-links">Copy permalink | name</div>
+                                <div class="guide-meta">
+                                    <small>★${i.star} ${userInventory.includes(i.id) ? '✅' : ''}</small>
+                                    <b class="score-tag">${i.finalScore.toLocaleString()}</b>
+                                </div>
                             </div>
                         </li>`).join('')}
                 </ul>
@@ -155,6 +167,7 @@ function calculateEverything() {
     document.getElementById('result-container').style.display = 'block';
 }
 
+// --- CÁC HÀM UI ---
 function renderUI() {
     const cats = [...new Set(clothingData.map(i => i.type))].sort();
     document.getElementById('category-tabs').innerHTML = cats.map(cat => `<button class="tab-btn" onclick="showCat('${cat}')">${cat.toUpperCase()}</button>`).join('');
@@ -169,7 +182,10 @@ function showCat(type) {
         <label class="item-checkbox ${userInventory.includes(i.id)?'is-checked':''}">
             <input type="checkbox" value="${i.id}" ${userInventory.includes(i.id)?'checked':''} onchange="toggleItem('${i.id}', this.checked, this)">
             <img src="${i.image}" class="img-square">
-            <span class="item-name">${i.name}</span>
+            <div class="item-card-content">
+                <div class="item-id-info">no. ${i.id}</div>
+                <div class="item-name-text">${i.name}</div>
+            </div>
         </label>`).join('');
 }
 function toggleItem(id, own, el) { 
