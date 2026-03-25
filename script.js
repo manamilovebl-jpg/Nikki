@@ -45,9 +45,13 @@ async function init() {
                 userInventory.push(id);
             }
 
+            // TỰ ĐỘNG TẠO LINK ẢNH ICON THẬT DỰA TRÊN ID
+            // Kho ảnh này được lấy từ nguồn uy tín của cộng đồng Love Nikki
+            const autoImage = `https://raw.githubusercontent.com/lexi-the-pink/love-nikki-icons/master/images/${id}.png`;
+
             return {
                 id,
-                image: c[1].trim(),
+                image: autoImage, // Sử dụng link ảnh icon thật
                 name: c[27]?.trim().replace(/"/g,"") || c[2]?.trim().replace(/"/g,""), // Cột AB ưu tiên
                 type: c[4].trim().toLowerCase(),
                 star: c[5].trim(),
@@ -131,7 +135,7 @@ function calculateEverything() {
     document.getElementById('total-score-val').innerText = totalScore.toLocaleString();
     document.getElementById('best-set-list').innerHTML = bestSet.map(i => `
         <li class="best-item-card">
-            <img src="${i.image}" class="img-square">
+            <img src="${i.image}" class="img-square" onerror="this.src='https://via.placeholder.com/80?text=No+Icon'">
             <div class="item-card-content">
                 <div class="item-id-info">${i.type} no. ${i.id}</div>
                 <div class="item-name-text" style="color:var(--pink)">${i.name}</div>
@@ -149,10 +153,10 @@ function calculateEverything() {
                 <ul class="guide-list active">
                     ${top20.map((i, idx) => `
                         <li class="${userInventory.includes(i.id) ? 'is-owned' : 'not-owned'}">
-                            <img src="${i.image}" class="img-square">
+                            <img src="${i.image}" class="img-square" onerror="this.src='https://via.placeholder.com/80?text=No+Icon'">
                             <div class="item-card-content">
                                 <div class="item-id-info">${i.type} no. ${i.id}</div>
-                                <div class="item-name-text">${i.name}</div>
+                                <div class="item-name-text">#${idx+1} ${i.name}</div>
                                 <div class="item-links">Copy permalink | name</div>
                                 <div class="guide-meta">
                                     <small>★${i.star} ${userInventory.includes(i.id) ? '✅' : ''}</small>
@@ -181,7 +185,7 @@ function showCat(type) {
     document.getElementById('item-lists').innerHTML = items.map(i => `
         <label class="item-checkbox ${userInventory.includes(i.id)?'is-checked':''}">
             <input type="checkbox" value="${i.id}" ${userInventory.includes(i.id)?'checked':''} onchange="toggleItem('${i.id}', this.checked, this)">
-            <img src="${i.image}" class="img-square">
+            <img src="${i.image}" class="img-square" onerror="this.src='https://via.placeholder.com/80?text=No+Icon'">
             <div class="item-card-content">
                 <div class="item-id-info">no. ${i.id}</div>
                 <div class="item-name-text">${i.name}</div>
