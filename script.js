@@ -54,13 +54,13 @@ async function init() {
             if (c.length < 28) continue;
 
             const rawID = c[0].trim();
-            const numberID = rawID.replace(/\D/g, ""); // Lọc ID để lấy hình
-            const iconUrl = `https://images.weserv.nl/?url=nikki.info/static/images/items/${numberID}.png`;
+            // LẤY HÌNH TRỰC TIẾP TỪ CỘT B (INDEX 1)
+            const imageUrl = c[1]?.trim().replace(/"/g,"");
 
             const item = {
                 id: rawID,
-                image: iconUrl,
-                name: c[27]?.trim().replace(/"/g,"") || c[2]?.trim().replace(/"/g,""), // Ưu tiên tên Tiếng Việt
+                image: imageUrl, // Sử dụng link từ Sheet
+                name: c[27]?.trim().replace(/"/g,"") || c[2]?.trim().replace(/"/g,""), // Cột AB
                 type: c[4]?.trim().toLowerCase(),
                 star: c[5]?.trim(),
                 quality: c[19]?.trim() || 'đồ thông thường',
@@ -78,10 +78,10 @@ async function init() {
             clothingData.push(item);
         }
         renderUI();
-    } catch (e) { console.error("Lỗi:", e); }
+    } catch (e) { console.error("Lỗi nạp dữ liệu:", e); }
 }
 
-// --- 4. LOGIC TÍNH TOÁN (CÀNG DÀI CÀNG CHUẨN) ---
+// --- 4. LOGIC TÍNH TOÁN CHI TIẾT ---
 function calculateEverything() {
     const arenaTag = document.getElementById('tag-select').value;
     const ARENA_SCALE = 1.315; 
@@ -122,14 +122,12 @@ function calculateEverything() {
         }).sort((a, b) => b.finalScore - a.finalScore);
     });
 
-    // CHỌN ĐẦM VS ÁO+QUẦN
     let bestSet = [];
     let totalScore = 0;
     const getBestOwned = (t) => (scoredByType[t] || []).find(i => userInventory.includes(i.id));
 
     const bDress = getBestOwned('dress'), bTop = getBestOwned('top'), bBottom = getBestOwned('bottom');
-    const sDress = bDress ? bDress.finalScore : 0;
-    const sTB = (bTop ? bTop.finalScore : 0) + (bBottom ? bBottom.finalScore : 0);
+    const sDress = bDress ? bDress.finalScore : 0, sTB = (bTop ? bTop.finalScore : 0) + (bBottom ? bBottom.finalScore : 0);
 
     if (sDress >= sTB && bDress) { bestSet.push(bDress); totalScore += sDress; }
     else { 
@@ -141,7 +139,6 @@ function calculateEverything() {
         const item = getBestOwned(type); if (item) { bestSet.push(item); totalScore += item.finalScore; }
     });
 
-    // HIỂN THỊ KẾT QUẢ
     document.getElementById('total-score-val').innerText = totalScore.toLocaleString();
     document.getElementById('best-set-list').innerHTML = bestSet.map(i => `
         <li class="best-item-card">
@@ -155,29 +152,14 @@ function calculateEverything() {
 
     let guideHtml = "";
     types.sort().forEach(type => {
-        const top20 = scoredByType[type].slice(0, 20);
-        guideHtml += `
-            <div class="guide-cat">
-                <div class="guide-title" onclick="this.nextElementSibling.classList.toggle('active')">${type.toUpperCase()} <span>▼</span></div>
-                <ul class="guide-list active">
-                    ${top20.map((i, idx) => `
-                        <li class="${userInventory.includes(i.id) ? 'is-owned' : 'not-owned'}">
-                            <img src="${i.image}" class="img-square" onerror="this.src='https://via.placeholder.com/100?text=No+Img'">
-                            <div class="item-card-content">
-                                <div class="item-id-info">${i.type} no. ${i.id}</div>
-                                <div class="item-name-text">#${idx+1} ${i.name}</div>
-                                <div class="item-links">Copy permalink | name</div>
-                                <div class="guide-meta"><small>★${i.star} ${userInventory.includes(i.id)?'✅':''}</small><b class="score-tag">${i.finalScore.toLocaleString()}</b></div>
-                            </div>
-                        </li>`).join('')}
-                </ul>
-            </div>`;
+        const top20 = (scoredByType[type] || []).slice(0, 20);
+        guideHtml += `<div class="guide-cat"><div class="guide-title" onclick="this.nextElementSibling.classList.toggle('active')">${type.toUpperCase()} <span>▼</span></div><ul class="guide-list active">
+            ${top20.map((i, idx) => `<li class="${userInventory.includes(i.id) ? 'is-owned' : 'not-owned'}"><img src="${i.image}" class="img-square" onerror="this.src='https://via.placeholder.com/100?text=No+Img'"><div class="item-card-content"><div class="item-id-info">${i.type} no. ${i.id}</div><div class="item-name-text">#${idx+1} ${i.name}</div><div class="item-links">Copy permalink | name</div><div class="guide-meta"><small>★${i.star} ${userInventory.includes(i.id)?'✅':''}</small><b class="score-tag">${i.finalScore.toLocaleString()}</b></div></div></li>`).join('')}</ul></div>`;
     });
     document.getElementById('advanced-guide').innerHTML = guideHtml;
     document.getElementById('result-container').style.display = 'block';
 }
 
-// --- 5. HÀM UI (TỦ ĐỒ & TABS) ---
 function renderUI() {
     const cats = [...new Set(clothingData.map(i => i.type))].sort();
     document.getElementById('category-tabs').innerHTML = cats.map(cat => `<button class="tab-btn" onclick="showCat('${cat}')">${cat.toUpperCase()}</button>`).join('');
