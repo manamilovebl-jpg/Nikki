@@ -1,39 +1,42 @@
-:root { --pink: #ff4d6d; --blue: #00b4d8; --bg: #0f0f0f; --card: #1a1a1a; --item-bg: #252525; --text: #f0f0f0; }
+:root { --pink: #ff4d6d; --blue: #00b4d8; --bg: #0d0d0d; --card: #161616; --item-bg: #222; --text: #f0f0f0; }
 body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 10px; margin: 0; }
-.container { max-width: 1000px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 15px; }
+.container { max-width: 1000px; margin: 0 auto; background: var(--card); padding: 25px; border-radius: 12px; }
 
-header h1 { color: var(--pink); text-align: center; margin-bottom: 5px; }
-header p { text-align: center; color: #888; font-size: 0.9rem; margin-top: 0; }
+header h1 { color: #fff; text-align: left; margin-bottom: 5px; font-weight: 300; letter-spacing: 2px; }
+header p { color: #888; font-size: 0.8rem; margin-top: 0; text-align: left; border-bottom: 1px solid #333; padding-bottom: 10px; }
 
-.input-group { display: flex; gap: 10px; margin-bottom: 10px; }
-.input-group select { flex: 1; padding: 10px; background: #333; color: white; border: 1px solid #444; border-radius: 8px; }
+.input-group { display: flex; gap: 10px; margin: 20px 0; }
+.input-group select { flex: 1; padding: 12px; background: #222; color: #fff; border: 1px solid #333; border-radius: 5px; cursor: pointer; }
 
-.weights-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #222; padding: 12px; border-radius: 10px; margin-bottom: 15px; }
-.weights-grid input { width: 45px; background: #333; border: 1px solid #444; color: #fff; padding: 4px; border-radius: 4px; }
+.weights-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+.weights-grid label { font-size: 0.75rem; color: #aaa; }
+.weights-grid input { width: 45px; background: #222; border: 1px solid #333; color: #fff; padding: 4px; border-radius: 4px; text-align: center; }
 
-/* Tủ đồ - Grid ô vuông */
-.items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; height: 500px; overflow-y: auto; background: #111; padding: 15px; border-radius: 10px; }
-.item-checkbox { background: var(--item-bg); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; border: 2px solid transparent; position: relative; transition: 0.2s; }
-.item-checkbox input { position: absolute; top: 8px; right: 8px; transform: scale(1.2); }
+/* Tủ đồ Grid */
+.items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; height: 500px; overflow-y: auto; background: #0a0a0a; padding: 15px; border-radius: 10px; }
+.item-checkbox { background: var(--item-bg); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; position: relative; border: 1px solid #333; }
+.item-checkbox input { position: absolute; top: 8px; right: 8px; }
 .item-checkbox.is-checked { border-color: var(--pink); background: #2d1a1e; }
 
-.img-square { width: 80px; height: 80px; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px; background: #333; margin-bottom: 8px; border: 1px solid #444; }
-.item-name { font-size: 0.75rem; font-weight: bold; line-height: 1rem; height: 2rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+/* Ô vuông hình ảnh */
+.img-square { width: 80px; height: 80px; aspect-ratio: 1/1; object-fit: cover; border-radius: 6px; background: #333; margin-bottom: 10px; border: 1px solid #444; }
+
+/* Text Item chuẩn Nikki Info */
+.item-id-info { font-size: 0.7rem; color: #888; margin-bottom: 2px; text-transform: capitalize; }
+.item-name-text { 
+    font-size: 0.85rem; font-weight: bold; line-height: 1.1rem; height: 2.2rem; overflow: hidden; 
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: #eee;
+}
+.item-links { font-size: 0.65rem; color: #00b4d8; margin-top: 5px; opacity: 0.8; }
 
 /* Rankings 2 cột */
-.guide-cat { margin-bottom: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
-.guide-title { background: #333; padding: 12px; font-weight: bold; color: var(--blue); cursor: pointer; display: flex; justify-content: space-between; }
-.guide-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; background: #151515; list-style: none; margin: 0; }
-.guide-list li { display: flex; align-items: center; gap: 12px; background: #222; padding: 10px; border-radius: 10px; border-left: 4px solid #444; }
-.is-owned { border-left-color: #4caf50 !important; }
-.not-owned { border-left-color: #f44336 !important; opacity: 0.8; }
-.score-tag { color: #ffd700; font-weight: bold; font-size: 0.85rem; margin-left: auto; }
+.guide-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; background: #111; list-style: none; margin: 0; }
+.guide-list li { display: flex; align-items: center; gap: 15px; background: #1a1a1a; padding: 12px; border-radius: 8px; border: 1px solid #222; position: relative; }
+.is-owned { border-left: 4px solid #4caf50 !important; }
+.not-owned { border-left: 4px solid #f44336 !important; opacity: 0.8; }
+.score-tag { color: #ffd700; font-weight: bold; font-size: 0.9rem; margin-left: auto; }
 
-/* Best Set */
-.best-set-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; list-style: none; padding: 0; }
-.best-set-grid li { display: flex; align-items: center; gap: 12px; background: #2d1a1e; border: 1px solid var(--pink); padding: 12px; border-radius: 10px; }
-
-.btn-main { width: 100%; background: var(--pink); color: #fff; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
-.tabs-container { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-.tab-btn { background: #333; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-.tab-btn.active { background: var(--pink); }
+.btn-main { width: 100%; background: var(--pink); color: #fff; border: none; padding: 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.3s; }
+.btn-main:hover { background: #ff758f; }
+.tab-btn { background: #222; color: #fff; border: 1px solid #333; padding: 10px 18px; border-radius: 5px; cursor: pointer; margin: 2px; }
+.tab-btn.active { background: var(--pink); border-color: var(--pink); }
