@@ -3,73 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NSTT Pro - Nikki Style</title>
+    <title>Tủ Đồ Ngôi Sao Thời Trang - Tự Động Đồng Bộ</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <div class="container">
-        <header>
-            <h1>NSTT - ANALYZER PRO</h1>
-            <p>Dữ liệu chuẩn Nikki Info • Tên Tiếng Việt • Giao diện Ô vuông</p>
-        </header>
-
-        <section class="calc-section">
-            <div class="input-group">
-                <select id="arena-select" onchange="applyArenaWeights()">
-                    <option value="">-- Chọn Chủ Đề Khu Thi Đấu --</option>
-                    <option value="tiecvenbien">Tiệc Ven Biển</option>
-                    <option value="vanphong">Ngôi Sao Văn Phòng</option>
-                    <option value="noel">Noel Đoàn Viên</option>
-                    <option value="vandung">Vận Động</option>
-                    <option value="xuan">Chuyến Du Xuân</option>
-                    <option value="he">Chuyện Ngày Hè</option>
-                    <option value="thethao">Liên Hoan Mùa Hè</option>
-                    <option value="thamtu">Sherlock Holmes</option>
-                    <option value="rock">Phòng Hòa Nhạc</option>
-                    <option value="thanhxuan">Thành Thiếu Nữ</option>
-                    <option value="tiectra">Giao Thời</option>
-                    <option value="datiec">Nữ Vương</option>
-                    <option value="nuvuong">Ngọn Lửa Ngày Đông</option>
-                    <option value="ngoisao">Vũ Hội Cung Đình</option>
-                    <option value="tuyet">Công Viên Cổ Tích</option>
-                    <option value="kythao">Đẹp Tuyệt Trần</option>
-                    <option value="phale">Đẹp Thanh Tú</option>
-                </select>
-                <select id="tag-select"><option value="">-- Không Tag --</option></select>
-            </div>
-
-            <div class="weights-grid">
-                <label>Giản: <input type="number" id="w-simple" value="0" step="0.1"></label>
-                <label>Hoa: <input type="number" id="w-gorgeous" value="0" step="0.1"></label>
-                <label>Sáng: <input type="number" id="w-pure" value="0" step="0.1"></label>
-                <label>Cảm: <input type="number" id="w-sexy" value="0" step="0.1"></label>
-                <label>Lịch: <input type="number" id="w-elegance" value="0" step="0.1"></label>
-                <label>Động: <input type="number" id="w-lively" value="0" step="0.1"></label>
-                <label>Ấm: <input type="number" id="w-warm" value="0" step="0.1"></label>
-                <label>Mát: <input type="number" id="w-cool" value="0" step="0.1"></label>
-                <label>Thương: <input type="number" id="w-cute" value="0" step="0.1"></label>
-                <label>Thành: <input type="number" id="w-mature" value="0" step="0.1"></label>
-            </div>
-            <button class="btn-main" onclick="calculateEverything()">PHÂN TÍCH BỘ ĐỒ</button>
-        </section>
-
-        <div id="result-container" style="display:none;">
-            <h2 class="section-title">BỘ ĐỒ MẠNH NHẤT: <span id="total-score-val">0</span></h2>
-            <ul id="best-set-list" class="best-set-grid"></ul>
-            
-            <h2 class="section-title">BẢNG XẾP HẠNG TOP 20</h2>
-            <div id="advanced-guide"></div>
+        <h2>TỦ ĐỒ NGÔI SAO THỜI TRANG</h2>
+        
+        <div class="import-container">
+            <label for="file-upload" class="custom-file-upload">
+                📁 Chọn file clothes_date để nhập tủ đồ
+            </label>
+            <input type="file" id="file-upload" accept="*" />
+            <span id="import-status">Chưa nhập dữ liệu tủ đồ cá nhân</span>
         </div>
 
-        <section class="inventory-section">
-            <div class="inventory-header">
-                <h2>TỦ ĐỒ CỦA TÔI</h2>
-                <button class="btn-save" onclick="saveInventory()">LƯU TỦ ĐỒ</button>
-            </div>
-            <div id="category-tabs" class="tabs-container"></div>
-            <div id="item-lists" class="items-grid"></div>
-        </section>
+        <div id="wardrobe-grid"></div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
