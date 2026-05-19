@@ -1,199 +1,160 @@
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvuIgcVvxltqjqcALb8tpaG-pmhY7VmV9G7AB0STX4964cPnLbG9Vfirr5N2fVoEEAkjCepvqxFtvg/pub?output=csv';
-let clothingData = [];
-let userInventory = [];
+// Khởi tạo các mảng dữ liệu toàn cục
+let ownedItems = []; 
+let allClothesData = []; 
 
-// --- 1. BẢNG ĐIỂM CHUẨN NIKKI INFO ---
-const baseTable = { 
-    'sss+': 6660, 'sss': 6000, 'sss-': 5520, 
-    'ss+': 5280, 'ss': 4800, 'ss-': 4416, 
-    's++': 4080, 's+': 3760, 's': 3600, 's-': 3360, 
-    'a+': 2640, 'a': 2400, 'a-': 2200, 
-    'b+': 1980, 'b': 1800, 'b-': 1660, 
-    'c+': 1320, 'c': 1200, 'c-': 1104 
-};
-const typeMods = { 'dress': 1, 'top': 0.5, 'bottom': 0.5, 'hair': 0.25, 'shoes': 0.25, 'coat': 0.25, 'makeup': 0.25, 'accessory': 0.1 };
-const rarityMods = { '6': 1.25, '5': 1, '4': 0.8, '3': 0.6, '2': 0.45, '1': 0.3 };
-const qualityMods = { 'đồ cực phẩm (top)': 1.25, 'đồ cao cấp': 1.1, 'đồ thông thường': 1 };
+// =========================================================================
+// 1. KHI TRANG WEB KHỞI ĐỘNG
+// =========================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Tự động kiểm tra xem bộ nhớ trình duyệt đã lưu tủ đồ từ lần trước chưa
+    const savedData = localStorage.getItem('nikki_owned_items');
+    if (savedData) {
+        ownedItems = JSON.parse(savedData);
+        updateStatusText(`Đã nhận diện: ${ownedItems.length} món đồ của cậu!`, "#4caf50");
+    }
 
-// --- 2. HỆ SỐ 17 CHỦ ĐỀ KHU THI ĐẤU ---
-const arenaData = {
-    "tiecvenbien": { simple: 0.67, sexy: 1.33, lively: 1.33, cool: 1.33, cute: 1.33 },
-    "vanphong": { simple: 1.33, elegance: 1.33, mature: 1.33, sexy: 1, cool: 0.67 },
-    "noel": { simple: 1.33, pure: 1.33, warm: 1.33, cute: 1, lively: 0.67 },
-    "vandung": { simple: 1, lively: 1.33, sexy: 1.33, warm: 1.33, mature: 0.67 },
-    "xuan": { simple: 1.33, lively: 1.33, cute: 1.33, pure: 1, cool: 0.67 },
-    "he": { simple: 1.33, pure: 1.33, cool: 1.33, cute: 1, lively: 0.67 },
-    "thethao": { simple: 1.33, lively: 1.33, cute: 1.33, pure: 1, cool: 0.67 },
-    "thamtu": { simple: 1.33, elegance: 1.33, mature: 1.33, sexy: 1, warm: 0.67 },
-    "rock": { simple: 1, lively: 1.33, sexy: 1.33, gorgeous: 1.33, cool: 0.67 },
-    "thanhxuan": { simple: 1.33, pure: 1.33, cute: 1.33, lively: 1, cool: 0.67 },
-    "tiectra": { gorgeous: 1.33, pure: 1.33, cute: 1.33, simple: 1, cool: 0.67 },
-    "datiec": { gorgeous: 1.33, elegance: 1.33, sexy: 1.33, mature: 1, warm: 0.67 },
-    "nuvuong": { gorgeous: 1.33, elegance: 1.33, mature: 1.33, sexy: 1, cool: 0.67 },
-    "ngoisao": { gorgeous: 1.33, lively: 1.33, sexy: 1.33, simple: 1, cool: 0.67 },
-    "tuyet": { gorgeous: 1.33, elegance: 1.33, pure: 1.33, mature: 1, warm: 0.67 },
-    "kythao": { gorgeous: 1.33, elegance: 1.33, pure: 1.33, cute: 1, cool: 0.67 },
-    "phale": { gorgeous: 1.33, elegance: 1.33, cute: 1.33, pure: 1, cool: 0.67 }
-};
+    // Tiến hành fetch dữ liệu tổng từ file JSON của cậu
+    loadWardrobeData();
 
-// --- 3. KHỞI TẠO VÀ LOAD DỮ LIỆU ---
-async function init() {
-    try {
-        const response = await fetch(SHEET_URL);
-        const csvData = await response.text();
-        const rows = csvData.split(/\r?\n/);
-        
-        const savedInventory = localStorage.getItem('inventory');
-        userInventory = savedInventory ? JSON.parse(savedInventory) : [];
-        clothingData = [];
+    // Lắng nghe sự kiện người dùng chọn file cập nhật tủ đồ
+    const fileInput = document.getElementById('file-upload');
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileUpload);
+    }
+});
 
-        for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            if (!row.trim()) continue;
-            const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            if (c.length < 28) continue;
+// =========================================================================
+// 2. BỘ LỌC THÔNG MINH - ĐỌC VÀ KHỬ KÝ TỰ LẠ CỦA FILE CLOTHES_DATE
+// =========================================================================
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-            const rawID = c[0].trim();
-            // LẤY HÌNH TRỰC TIẾP TỪ CỘT B (INDEX 1)
-            const imageUrl = c[1]?.trim().replace(/"/g,"");
+    updateStatusText("Đang dọn dẹp ký tự lạ và lọc ID...", "#ff9800");
 
-            const item = {
-                id: rawID,
-                image: imageUrl, // Sử dụng link từ Sheet
-                name: c[27]?.trim().replace(/"/g,"") || c[2]?.trim().replace(/"/g,""), // Cột AB
-                type: c[4]?.trim().toLowerCase(),
-                star: c[5]?.trim(),
-                quality: c[19]?.trim() || 'đồ thông thường',
-                tags: [c[16]?.trim(), c[17]?.trim()].filter(t => t && t !== ""),
-                stats: {
-                    gorgeous: c[6]?.trim(), simple: c[7]?.trim(), elegance: c[8]?.trim(),
-                    lively: c[9]?.trim(), mature: c[10]?.trim(), cute: c[11]?.trim(),
-                    sexy: c[12]?.trim(), pure: c[13]?.trim(), warm: c[14]?.trim(), cool: c[15]?.trim()
-                }
-            };
-            
-            if (c[3]?.trim().toUpperCase() === 'TRUE' && !userInventory.includes(rawID)) {
-                userInventory.push(rawID);
-            }
-            clothingData.push(item);
-        }
-        renderUI();
-    } catch (e) { console.error("Lỗi nạp dữ liệu:", e); }
-}
-
-// --- 4. LOGIC TÍNH TOÁN CHI TIẾT ---
-function calculateEverything() {
-    const arenaTag = document.getElementById('tag-select').value;
-    const ARENA_SCALE = 1.315; 
+    const reader = new FileReader();
     
-    const weights = {
-        gorgeous: parseFloat(document.getElementById('w-gorgeous').value) || 0,
-        simple: parseFloat(document.getElementById('w-simple').value) || 0,
-        pure: parseFloat(document.getElementById('w-pure').value) || 0,
-        sexy: parseFloat(document.getElementById('w-sexy').value) || 0,
-        elegance: parseFloat(document.getElementById('w-elegance').value) || 0,
-        lively: parseFloat(document.getElementById('w-lively').value) || 0,
-        warm: parseFloat(document.getElementById('w-warm').value) || 0,
-        cool: parseFloat(document.getElementById('w-cool').value) || 0,
-        cute: parseFloat(document.getElementById('w-cute').value) || 0,
-        mature: parseFloat(document.getElementById('w-mature').value) || 0
+    reader.onload = function(e) {
+        const textContent = e.target.result;
+
+        // Quét toàn bộ file và bốc ra các chuỗi số có độ dài từ 5 đến 8 chữ số (chuẩn ID của game)
+        const foundIDs = textContent.match(/\b\d{5,8}\b/g);
+
+        if (foundIDs && foundIDs.length > 0) {
+            // Chuyển mảng chữ thành mảng Số, loại bỏ sạch ID trùng lặp, sắp xếp từ nhỏ đến lớn
+            ownedItems = [...new Set(foundIDs.map(Number))].sort((a, b) => a - b);
+            
+            // Lưu ngay vào bộ nhớ LocalStorage của trình duyệt để lần sau vào không cần nạp lại file
+            localStorage.setItem('nikki_owned_items', JSON.stringify(ownedItems));
+
+            updateStatusText(`Thành công! Đã đồng bộ ${ownedItems.length} món đồ vào web.`, "#4caf50");
+
+            // Vẽ lại giao diện tủ đồ để cập nhật ngay lập tức các món sáng / mờ
+            renderWardrobe(allClothesData);
+        } else {
+            updateStatusText("Lỗi: File này không chứa dữ liệu ID đồ hợp lệ!", "#f44336");
+        }
     };
 
-    const types = [...new Set(clothingData.map(i => i.type))];
-    let scoredByType = {};
+    reader.readAsText(file, "UTF-8");
+}
 
-    types.forEach(type => {
-        scoredByType[type] = clothingData.filter(i => i.type === type).map(item => {
-            let score = 0;
-            let groupMod = typeMods['accessory'];
-            if (type === 'dress') groupMod = typeMods['dress'];
-            else if (type === 'top' || type === 'bottom') groupMod = typeMods['top'];
-            else if (['hair', 'shoes', 'coat', 'makeup'].includes(type)) groupMod = typeMods[type];
-
-            for (let attr in weights) {
-                if (weights[attr] > 0) {
-                    const rank = item.stats[attr]?.toLowerCase() || '';
-                    score += (baseTable[rank] || 0) * groupMod * rarityMods[item.star] * qualityMods[item.quality.toLowerCase()] * weights[attr];
-                }
-            }
-            score *= ARENA_SCALE;
-            if (arenaTag && item.tags.includes(arenaTag)) score *= 2.15;
-            return { ...item, finalScore: Math.round(score) };
-        }).sort((a, b) => b.finalScore - a.finalScore);
-    });
-
-    let bestSet = [];
-    let totalScore = 0;
-    const getBestOwned = (t) => (scoredByType[t] || []).find(i => userInventory.includes(i.id));
-
-    const bDress = getBestOwned('dress'), bTop = getBestOwned('top'), bBottom = getBestOwned('bottom');
-    const sDress = bDress ? bDress.finalScore : 0, sTB = (bTop ? bTop.finalScore : 0) + (bBottom ? bBottom.finalScore : 0);
-
-    if (sDress >= sTB && bDress) { bestSet.push(bDress); totalScore += sDress; }
-    else { 
-        if (bTop) { bestSet.push(bTop); totalScore += bTop.finalScore; } 
-        if (bBottom) { bestSet.push(bBottom); totalScore += bBottom.finalScore; } 
+// Hàm cập nhật trạng thái chữ hiển thị cạnh nút bấm
+function updateStatusText(text, color) {
+    const statusSpan = document.getElementById('import-status');
+    if (statusSpan) {
+        statusSpan.innerText = text;
+        statusSpan.style.color = color;
     }
+}
 
-    types.filter(t => !['dress', 'top', 'bottom'].includes(t)).forEach(type => {
-        const item = getBestOwned(type); if (item) { bestSet.push(item); totalScore += item.finalScore; }
-    });
+// =========================================================================
+// 3. TẢI DỮ LIỆU TỔNG TỪ SPREADSHEET / FILE JSON
+// =========================================================================
+async function loadWardrobeData() {
+    try {
+        // Cậu nhớ đặt tên file data tổng (chứa thuộc tính, ảnh) trùng với tên dưới này nhé
+        const response = await fetch('clothes_data.json'); 
+        allClothesData = await response.json();
+        
+        // Tạo giao diện hiển thị đồ lên màn hình
+        renderWardrobe(allClothesData);
+    } catch (error) {
+        console.error("Lỗi khi tải dữ liệu tổng từ file JSON:", error);
+        updateStatusText("Không tìm thấy file clothes_data.json tổng!", "#f44336");
+    }
+}
 
-    document.getElementById('total-score-val').innerText = totalScore.toLocaleString();
-    document.getElementById('best-set-list').innerHTML = bestSet.map(i => `
-        <li class="best-item-card">
-            <img src="${i.image}" class="img-square" onerror="this.src='https://via.placeholder.com/100?text=No+Img'">
-            <div class="item-card-content">
-                <div class="item-id-info">${i.type} no. ${i.id}</div>
-                <div class="item-name-text" style="color:var(--pink)">${i.name}</div>
-                <b class="score-tag">${i.finalScore.toLocaleString()}</b>
+// =========================================================================
+// 4. VẼ GIAO DIỆN TỦ ĐỒ (HIỂN THỊ ICON VUÔNG)
+// =========================================================================
+function renderWardrobe(dataList) {
+    const gridContainer = document.getElementById('wardrobe-grid');
+    if (!gridContainer) return;
+    
+    gridContainer.innerHTML = ''; // Dọn sạch lưới đồ cũ trước khi vẽ
+
+    dataList.forEach(item => {
+        // Tạo thẻ div bọc ngoài cho mỗi món đồ
+        const itemCard = document.createElement('div');
+        itemCard.className = 'item-card';
+        itemCard.setAttribute('data-id', item.id);
+        itemCard.setAttribute('data-category', item.category); // Đính kèm category để so sánh phối đồ
+
+        // Tự động đối chiếu xem ID món này có nằm trong danh sách đồ cậu đã có hay không
+        const isOwned = ownedItems.includes(Number(item.id));
+        if (isOwned) {
+            itemCard.classList.add('owned');     // Có đồ -> Hiện rõ ràng
+        } else {
+            itemCard.classList.add('not-owned'); // Chưa có -> Tự động làm mờ
+        }
+
+        // Đổ cấu trúc ảnh vuông (link từ spreadsheet của cậu) và thông tin ID/Tên đồ
+        itemCard.innerHTML = `
+            <div class="image-wrapper">
+                <img src="${item.image_link}" alt="${item.name}" onerror="this.src='default-icon.png';">
             </div>
-        </li>`).join('');
+            <div class="item-info">
+                <span class="item-id">${item.id}</span>
+                <span class="item-name">${item.name}</span>
+            </div>
+        `;
 
-    let guideHtml = "";
-    types.sort().forEach(type => {
-        const top20 = (scoredByType[type] || []).slice(0, 20);
-        guideHtml += `<div class="guide-cat"><div class="guide-title" onclick="this.nextElementSibling.classList.toggle('active')">${type.toUpperCase()} <span>▼</span></div><ul class="guide-list active">
-            ${top20.map((i, idx) => `<li class="${userInventory.includes(i.id) ? 'is-owned' : 'not-owned'}"><img src="${i.image}" class="img-square" onerror="this.src='https://via.placeholder.com/100?text=No+Img'"><div class="item-card-content"><div class="item-id-info">${i.type} no. ${i.id}</div><div class="item-name-text">#${idx+1} ${i.name}</div><div class="item-links">Copy permalink | name</div><div class="guide-meta"><small>★${i.star} ${userInventory.includes(i.id)?'✅':''}</small><b class="score-tag">${i.finalScore.toLocaleString()}</b></div></div></li>`).join('')}</ul></div>`;
+        // Sự kiện click để chọn đồ mang đi so sánh tính điểm
+        itemCard.addEventListener('click', () => {
+            toggleSelectCard(itemCard, item);
+        });
+
+        gridContainer.appendChild(itemCard);
     });
-    document.getElementById('advanced-guide').innerHTML = guideHtml;
-    document.getElementById('result-container').style.display = 'block';
 }
 
-function renderUI() {
-    const cats = [...new Set(clothingData.map(i => i.type))].sort();
-    document.getElementById('category-tabs').innerHTML = cats.map(cat => `<button class="tab-btn" onclick="showCat('${cat}')">${cat.toUpperCase()}</button>`).join('');
-    const allTags = [...new Set(clothingData.flatMap(i => i.tags))].sort();
-    document.getElementById('tag-select').innerHTML = '<option value="">-- Chọn Tag --</option>' + allTags.map(t => `<option value="${t}">${t}</option>`).join('');
-    if (cats.length > 0) showCat(cats[0]);
-}
-
-function showCat(type) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.innerText.toLowerCase() === type.toLowerCase()));
-    const items = clothingData.filter(i => i.type === type);
-    document.getElementById('item-lists').innerHTML = items.map(i => `
-        <label class="item-checkbox ${userInventory.includes(i.id) ? 'is-checked' : ''}">
-            <input type="checkbox" value="${i.id}" ${userInventory.includes(i.id) ? 'checked' : ''} onchange="toggleItem('${i.id}', this.checked, this)">
-            <img src="${i.image}" class="img-square" onerror="this.src='https://via.placeholder.com/100?text=No+Img'">
-            <div class="item-card-content"><div class="item-id-info">no. ${i.id}</div><div class="item-name-text">${i.name}</div></div>
-        </label>`).join('');
-}
-
-function toggleItem(id, own, el) {
-    if (own) { if (!userInventory.includes(id)) userInventory.push(id); el.parentElement.classList.add('is-checked'); }
-    else { userInventory = userInventory.filter(i => i !== id); el.parentElement.classList.remove('is-checked'); }
-}
-
-function saveInventory() { localStorage.setItem('inventory', JSON.stringify(userInventory)); alert("Đã lưu thành công!"); }
-
-function applyArenaWeights() {
-    const aid = document.getElementById('arena-select').value;
-    const attrs = ['simple','gorgeous','pure','sexy','elegance','lively','warm','cool','cute','mature'];
-    attrs.forEach(a => document.getElementById(`w-${a}`).value = 0);
-    if (aid && arenaData[aid]) {
-        for (let k in arenaData[aid]) document.getElementById(`w-${k}`).value = arenaData[aid][k];
-        calculateEverything();
+// =========================================================================
+// 5. LOGIC CHỌN ĐỒ VÀ ĐỐI CHIẾU CATEGORY (Tránh mất thuộc tính phụ kiện)
+// =========================================================================
+function toggleSelectCard(cardElement, itemData) {
+    // Nếu món đồ này đang được chọn rồi -> Click vào là hủy chọn
+    if (cardElement.classList.contains('selected')) {
+        cardElement.classList.remove('selected');
+        // (Cậu có thể viết thêm logic xóa món này khỏi bảng tính điểm phối đồ ở đây)
+    } else {
+        // Nếu chọn món mới -> Tự động gỡ bỏ món cũ ĐANG ĐƯỢC CHỌN cùng thuộc loại (category) đó ra
+        removeSelectionByCategory(itemData.category);
+        
+        // Kích hoạt viền chọn cho món mới
+        cardElement.classList.add('selected');
+        // (Cậu viết thêm logic đẩy thông số món này vào bảng so sánh điểm ở đây)
     }
 }
 
-init();
+// Hàm quét và gỡ chọn món đồ cũ cùng loại (Ví dụ: Đổi từ Áo này sang Áo khác)
+function removeSelectionByCategory(category) {
+    // Chỉ quét những món đang có trạng thái được chọn (selected) trên màn hình
+    const selectedCards = document.querySelectorAll('.item-card.selected');
+    selectedCards.forEach(card => {
+        const cardCategory = card.getAttribute('data-category');
+        if (cardCategory === category) {
+            card.classList.remove('selected');
+        }
+    });
+}
